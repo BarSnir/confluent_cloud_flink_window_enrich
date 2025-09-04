@@ -18,10 +18,11 @@ class KafkaAdminClientWrap:
             'sasl.password': os.getenv('CONFLUENT_KAFKA_API_SECRET')     
         }
     
-    def find_topics(self, topics_list, retries=50, backoff_seconds=10):
+    def find_topics(self, topics_list, retries=10000, backoff_seconds=15):
         retries_counter = 0
+        self.logger.info(f"Looking for topics, it can take a while during debezium snapshot.")
+        self.logger.info("Perfect time to grab a coffee ☕️...")
         while True:
-            time.sleep(backoff_seconds)
             exists_topic_list = list(
                 self.client.list_topics().topics.keys()
             )
@@ -33,3 +34,4 @@ class KafkaAdminClientWrap:
             self.logger.info(f"Looking for topics, attempt {retries_counter}...")
             if retries_counter > retries:
                 raise Exception("Failed to find topics.")
+            time.sleep(backoff_seconds)

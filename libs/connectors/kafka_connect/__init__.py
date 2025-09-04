@@ -22,8 +22,8 @@ class KafkaConnectClient:
             logger.error(response.json())
             raise RequestException
         
-    def connector_config_auth_set(config):
-        config['config']['confluent.topic.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CCLOUD_API_KEY')}\" password=\"{os.getenv('CCLOUD_API_SECRET')}\";"
-        config['config']['schema.history.internal.consumer.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CCLOUD_API_KEY')}\" password=\"{os.getenv('CCLOUD_API_SECRET')}\";"
-        config['config']['schema.history.internal.producer.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CCLOUD_API_KEY')}\" password=\"{os.getenv('CCLOUD_API_SECRET')}\";"
+    def connector_config_auth_set(self, config):
+        config['config']['confluent.topic.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CONFLUENT_KAFKA_API_KEY')}\" password=\"{os.getenv('CONFLUENT_KAFKA_API_SECRET')}\";"
+        config['config']['schema.history.internal.consumer.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CONFLUENT_KAFKA_API_KEY')}\" password=\"{os.getenv('CONFLUENT_KAFKA_API_SECRET')}\";"
+        config['config']['schema.history.internal.producer.sasl.jaas.config'] = f"org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{os.getenv('CONFLUENT_KAFKA_API_KEY')}\" password=\"{os.getenv('CONFLUENT_KAFKA_API_SECRET')}\";"
         return config

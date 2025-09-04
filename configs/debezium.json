@@ -1,5 +1,5 @@
 {
-    "name": "debezium_pyflink_v1",
+    "name": "debezium_pyflink_v2",
     "config":{
     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
     "database.history.kafka.bootstrap.servers": "pkc-z9doz.eu-west-1.aws.confluent.cloud:9092",
@@ -9,7 +9,7 @@
     "confluent.topic.sasl.mechanism": "PLAIN",
     "database.history.kafka.recovery.attempts": "8",
     "database.history.kafka.recovery.poll.interval.ms": "10000",
-    "database.history.kafka.topic": "history_pyflink_project_v1",
+    "database.history.kafka.topic": "history_pyflink_project_v2",
     "database.history.skip.unparseable.ddl": "false",
     "database.hostname": "host.docker.internal",
     "database.include.list": "production",
