@@ -91,7 +91,7 @@ services:
       bash -c  "python ./project/main.py"
     environment:
     - DATABASE=production
-    - DB_HOST=db
+    - DB_HOST=mysql
     - DB_USER=root
     - DB_PASSWORD=password
     - ENV=development

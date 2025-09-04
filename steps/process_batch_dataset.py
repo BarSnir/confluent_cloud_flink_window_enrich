@@ -1,10 +1,8 @@
 import json, os, subprocess, time
-from libs.utils.docker import DockerUtils
 from libs.utils.subprocess import SubprocessUtil
 from libs.utils.logger import ColorLogger
 
 MODULE_MESSAGE = 'Step B || Generating datasets with Apache Flink batch operations!'
-DOCKER_ACCESS = '/var/run/docker.sock'
 
 def process(logger):
     time.sleep(10)
@@ -12,7 +10,6 @@ def process(logger):
     logger.info(MODULE_MESSAGE)
     ColorLogger.log_new_step_dashes(logger)
     SubprocessUtil.allow_execute_pyflink_flies()
-    docker_util = DockerUtils(DOCKER_ACCESS)
     try:
         with open(f"{os.getenv('PROCESS_CONFIG_PATH')}") as process_config_file:
             null_logging = open("NUL","w")
@@ -44,6 +41,4 @@ def process(logger):
         logger.error("Something weird happened")
         logger.exception(e)
     finally:
-        logger.info("Restarting flink cluster...")
-        docker_util.restart_container("jobmanager")
-        docker_util.restart_container("taskmanager")
+        logger.info("Shut down flink cluster...")
