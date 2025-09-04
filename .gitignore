@@ -164,3 +164,7 @@ cython_debug/
 # flink checkpoints dir
 flink-checkpoints/
 elasticsearch_vol/
+.terraform*
+terraform.tfstate*
+standard_cc_env
+secrets.json
