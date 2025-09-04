@@ -1,4 +1,4 @@
-import os, time
+import os
 from requests.exceptions import RequestException
 from libs.utils.list import ListUtils
 from libs.utils.files import FileUtils

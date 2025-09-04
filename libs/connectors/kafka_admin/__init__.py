@@ -18,7 +18,7 @@ class KafkaAdminClientWrap:
             'sasl.password': os.getenv('CONFLUENT_KAFKA_API_SECRET')     
         }
     
-    def find_topics(self, topics_list, retries=10, backoff_seconds=100):
+    def find_topics(self, topics_list, retries=50, backoff_seconds=10):
         retries_counter = 0
         while True:
             time.sleep(backoff_seconds)
