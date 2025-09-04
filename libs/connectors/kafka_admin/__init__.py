@@ -9,11 +9,16 @@ class KafkaAdminClientWrap:
         self.client = AdminClient(self.config)
 
     def build_client_config(self):
+        self.logger
         return {
-            'bootstrap.servers': os.getenv('KAFKA_SERVERS'),     
+            'bootstrap.servers': os.getenv('KAFKA_SERVERS'),
+            'security.protocol': 'SASL_SSL',
+            'sasl.mechanisms': 'PLAIN',
+            'sasl.username': os.getenv('CONFLUENT_KAFKA_API_KEY'),
+            'sasl.password': os.getenv('CONFLUENT_KAFKA_API_SECRET')     
         }
     
-    def find_topics(self, topics_list, retries=10, backoff_seconds=10):
+    def find_topics(self, topics_list, retries=10, backoff_seconds=100):
         retries_counter = 0
         while True:
             time.sleep(backoff_seconds)
@@ -25,5 +30,6 @@ class KafkaAdminClientWrap:
                 self.logger.debug("Found topics")
                 break
             retries_counter += 1 
+            self.logger.info(f"Looking for topics, attempt {retries_counter}...")
             if retries_counter > retries:
                 raise Exception("Failed to find topics.")

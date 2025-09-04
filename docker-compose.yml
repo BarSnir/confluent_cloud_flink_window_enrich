@@ -100,7 +100,9 @@ services:
     - DEBEZIUM_CONFIG_FILE_PATH=/opt/flink/project/configs/debezium.json
     - SCRIPTS_PATH_DIR=/opt/flink/project/scripts
     - CONNECT_URL=http://kafka-connect:8083
-    - KAFKA_SERVERS=broker:29092
+    - KAFKA_SERVERS=${CCLOUD_BROKER_HOST}:9092
+    - CONFLUENT_KAFKA_API_KEY=${CCLOUD_API_KEY}
+    - CONFLUENT_KAFKA_API_SECRET=${CCLOUD_API_SECRET}
     - ELASTICSEARCH_URL=elasticsearch:9200
     - MINIO_HOST=minio:9000
     - MINIO_USER=bar
@@ -112,9 +114,6 @@ services:
     - ./datasets:/opt/flink/datasets
     - .:/opt/flink/project
     - ./flink_checkpoints:/opt/flink/checkpoints
-    - type: bind
-      source: /var/run/docker.sock
-      target: /var/run/docker.sock
     scale: 1
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
@@ -164,6 +163,62 @@ services:
     - 7687:7687
     volumes:
     - neo4j_data:/data/
+  kafka-connect-onpremis:
+    image: confluentinc/cp-kafka-connect:7.5.3
+    container_name: kafka-connect
+    platform: linux/amd64
+    attach: false
+    restart: always
+    ports:
+      - 8083:8083
+    healthcheck:
+      test: curl http://kafka-connect:8083/ || exit 1
+      start_period: 4m
+      interval: 30s
+      timeout: 10s
+      retries: 1
+    environment:
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      CONNECT_CUB_KAFKA_TIMEOUT: 300
+      CONNECT_BOOTSTRAP_SERVERS: "${CCLOUD_BROKER_HOST}:9092"
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect-01'
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect-group-01
+      CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-group-01-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _kafka-connect-group-01-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _kafka-connect-group-01-status
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "${CCLOUD_SCHEMA_REGISTRY_URL}"
+      CONNECT_KEY_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: "USER_INFO"
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: "${CCLOUD_SCHEMA_REGISTRY_API_KEY}:${CCLOUD_SCHEMA_REGISTRY_API_SECRET}"
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "${CCLOUD_SCHEMA_REGISTRY_URL}"
+      CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: "USER_INFO"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: "${CCLOUD_SCHEMA_REGISTRY_API_KEY}:${CCLOUD_SCHEMA_REGISTRY_API_SECRET}"
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '3'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '3'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '3'
+      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      CONNECT_SASL_MECHANISM: "PLAIN"
+      CONNECT_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${CCLOUD_API_KEY}\" password=\"${CCLOUD_API_SECRET}\";"
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECT_CONSUMER_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      CONNECT_CONSUMER_SASL_MECHANISM: "PLAIN"
+      CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${CCLOUD_API_KEY}\" password=\"${CCLOUD_API_SECRET}\";"
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECT_PRODUCER_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      CONNECT_PRODUCER_SASL_MECHANISM: "PLAIN"
+      CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${CCLOUD_API_KEY}\" password=\"${CCLOUD_API_SECRET}\";"
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
+    command: > 
+      bash -c "
+      confluent-hub install --no-prompt debezium/debezium-connector-mysql:2.4.2 && \
+      /etc/confluent/docker/run"
 volumes:
   my_db:
   minio_storage:

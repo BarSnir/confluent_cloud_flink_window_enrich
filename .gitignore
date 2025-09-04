@@ -168,3 +168,5 @@ elasticsearch_vol/
 terraform.tfstate*
 standard_cc_env
 secrets.json
+configs/debezium.json
+/Users/barsnir/Desktop/projects/confluent_cloud_flink_window_enrich/configs/debezium.json

@@ -18,21 +18,22 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - Kafka Connect MinIO, Elasticsearch, Neo4j
 - Producer Generator to database
 - Elasticsearch [✅]
+- Kibana [✅]
 - Neo4j [✅]
 - MinIO [✅]
 
 2. Terraform
-- Connectors API Key 
-- Connectors API Secret 
-- Connectors Service Account ID 
-- Environment ID 
-- Flink Compute Pool ID 
-- Kafka Bootstrap Endpoint 
-- Kafka Cluster ID 
-- Schema Registry API Key 
-- Schema Registry API Secret 
-- Schema Registry ID 
-- Schema Registry Service Account ID 
+- Connectors API Key [✅]
+- Connectors API Secret [✅]
+- Connectors Service Account ID [✅]
+- Environment ID [✅]
+- Flink Compute Pool ID [✅]
+- Kafka Bootstrap Endpoint [✅]
+- Kafka Cluster ID [✅]
+- Schema Registry API Key [✅]
+- Schema Registry API Secret [✅]
+- Schema Registry ID [✅]
+- Schema Registry Service Account ID [✅]
 
 # Installation
 1. Terraform:
