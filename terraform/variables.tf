@@ -15,3 +15,9 @@ variable sr_api_key_description {
     type        = string
     default     = "API keys for schema creation"
 }
+
+variable flink_admin_service_account_description {
+    description = "Flink Admin"
+    type        = string
+    default     = "API keys for schema creation"
+}

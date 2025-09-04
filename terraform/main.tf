@@ -5,7 +5,7 @@ terraform {
   required_providers {
     confluent = {
       source  = "confluentinc/confluent"
-      version = "2.5.0"          
+      version = "2.38.0"          
     }
   }
 }
@@ -50,10 +50,16 @@ data "confluent_schema_registry_cluster" "bsnir-pipelines-schema-registry" {
 # Compute Pool
 #----------------------------------------------------------------
 
+data "confluent_flink_region" "bsnir-pipelines-compute-pool-data" {
+  cloud   = "AWS"
+  region  = "eu-west-1"
+}
+
+
 resource "confluent_flink_compute_pool" "bsnir-pipelines-compute-pool" {
   display_name     = "bsnir-pipelines-compute-pool"
-  cloud            = var.cloud
-  region           = var.region
+  cloud            = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.cloud
+  region           = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.region
   max_cfu          = 5
   environment {
     id = confluent_environment.bsnir-pipelines-env.id
@@ -77,6 +83,16 @@ resource "confluent_service_account" "bsnir-pipelines-schema-registry-service-ac
   ]
 }
 
+resource "confluent_service_account" "bsnir-pipelines-flink-admin-service-account" {
+  display_name = "bsnir-pipelines-flink-admin-service-account"
+  description  = var.flink_admin_service_account_description
+  depends_on = [
+    resource.confluent_flink_compute_pool.bsnir-pipelines-compute-pool
+  ]
+}
+
+
+
 
 #----------------------------------------------------------------
 #  Role bindings                                                        
@@ -97,7 +113,6 @@ resource "confluent_role_binding" "bsnir-pipelines-schema-registry-service-accou
     data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry
   ]
 }
-
 
 #----------------------------------------------------------------
 # API Keys                                                           
@@ -147,5 +162,26 @@ resource "confluent_api_key" "bsnir-pipelines-schema-registry-service-account-ap
     confluent_service_account.bsnir-pipelines-schema-registry-service-account,
     data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry
   ]
+}
+
+
+resource "confluent_api_key" "bsnir-pipelines-flink-service-account-api-key" {
+  display_name = "bsnir-pipelines-flink-service-account-api-key"
+  description  = "Flink API Key that is owned by 'env-manager' service account"
+  owner {
+    id          = confluent_service_account.bsnir-pipelines-flink-admin-service-account.id
+    api_version = confluent_service_account.bsnir-pipelines-flink-admin-service-account.api_version
+    kind        = confluent_service_account.bsnir-pipelines-flink-admin-service-account.kind
+  }
+
+  managed_resource {
+    id          = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.id
+    api_version = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.api_version
+    kind        = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.kind
+
+    environment {
+      id = confluent_environment.bsnir-pipelines-env.id
+    }
+  }
 }
 

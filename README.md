@@ -34,8 +34,8 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - Schema Registry API Secret [✅]
 - Schema Registry ID [✅]
 - Schema Registry Service Account ID [✅]
-- Flink API Key
-- Flink API Secret
+- Flink API Key [✅]
+- Flink API Secret [✅]
 - Flink Statements
 
 # Installation

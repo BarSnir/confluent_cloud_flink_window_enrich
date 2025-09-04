@@ -54,3 +54,15 @@ output "schema_registry_api_secret" {
   value       = confluent_api_key.bsnir-pipelines-schema-registry-service-account-api-key.secret
   sensitive   = true
 }
+
+output "flink_api_key" {
+  description = "Schema Registry API Secret"
+  value       = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.id
+  sensitive   = true
+}
+
+output "flink_api_secret" {
+  description = "Schema Registry API Secret"
+  value       = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.secret
+  sensitive   = true
+}
