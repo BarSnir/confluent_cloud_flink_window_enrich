@@ -84,6 +84,7 @@ services:
     container_name: pyflink-client
     depends_on:
     - taskmanager
+    - kafka-connect-onpremis
     build:
       context: ./images/pyflink
       dockerfile: .Dockerfile

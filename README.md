@@ -15,8 +15,8 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 1. Docker Compose:
 - MySql with Loaded Data[✅]
 - Kafka Connect Debezium [✅]
-- Kafka Connect MinIO, Elasticsearch, Neo4j
-- Producer Generator to database
+- Kafka Connect MinIO, Elasticsearch, Neo4j []
+- Producer Generator to database []
 - Elasticsearch [✅]
 - Kibana [✅]
 - Neo4j [✅]
@@ -36,7 +36,10 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - Schema Registry Service Account ID [✅]
 - Flink API Key [✅]
 - Flink API Secret [✅]
-- Flink Statements
+- Flink Create target Table Statements []
+
+3. Assets:
+- Temporal join
 
 # Installation
 1. Terraform:
@@ -58,3 +61,66 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 # Run
 1. docker compose up -d
 2. Inspect pyflink-client notes
+
+
+# SQLs
+## Temporal Join construct:
+1. Change the Fact Source Table to ```append```
+```
+ALTER TABLE `Orders` SET (
+  'changelog.mode' = 'append'
+);
+```
+2. Create Update table with Primary Key:
+```
+CREATE TABLE vehicles_extract (
+    `OrderId` STRING,
+    `VehicleId` STRING,
+    `KM` INT,
+    `PrevOwnerNumber` INT,
+    `MarketInfoId` STRING,
+    `MediaTypeId` INT,
+    `YearOnRoad` INT,
+    `TestDate` INT,
+    `ImproveId` INT,
+    PRIMARY KEY (`OrderId`) NOT ENFORCED
+) WITH (
+  'changelog.mode'='retract',
+  'kafka.cleanup-policy'='compact',
+  'value.format' = 'avro-registry',
+  'scan.startup.mode' = 'earliest-offset'
+);
+
+INSERT INTO vehicles_extract (
+    `VehicleId`,
+    `KM`,
+    `PrevOwnerNumber`,
+    `OrderId`,
+    `MarketInfoId`,
+    `MediaTypeId`,
+    `YearOnRoad`,
+    `TestDate` ,
+    `ImproveId`
+)
+SELECT 
+  Vehicles.VehicleId,
+  Vehicles.KM,
+  Vehicles.PrevOwnerNumber,
+  Vehicles.OrderId,
+  Vehicles.MarketInfoId,
+  Vehicles.MediaTypeId,
+  Vehicles.YearOnRoad,
+  Vehicles.TestDate,
+  Vehicles.ImproveId
+FROM Vehicles;
+
+```
+3. Temporal Join:
+```
+SELECT
+  v.`KM`
+FROM `Orders` AS o
+JOIN `vehicles_extract` FOR SYSTEM_TIME AS OF o.`$rowtime` AS v
+  ON o.OrderId = v.OrderId;
+```
+
