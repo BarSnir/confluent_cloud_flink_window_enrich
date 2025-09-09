@@ -1,200 +1,63 @@
-#----------------------------------------------------------------
-# Init
-#----------------------------------------------------------------
 terraform {
   required_providers {
     confluent = {
       source  = "confluentinc/confluent"
-      version = "2.38.0"          
+      version = "2.38.0"
     }
   }
 }
 # export CONFLUENT_CLOUD_API_KEY
 # export CONFLUENT_CLOUD_API_SECRET
-# export CONFLUENT_ORGANIZATION_ID
+# export CONFLUENT_CLOUD_ORGANIZATION_ID
 provider "confluent" {}
 
-#----------------------------------------------------------------
-# Environment
-#----------------------------------------------------------------
-
-resource "confluent_environment" "bsnir-pipelines-env" {
-  display_name = "bsnir_pipelines_env"
+module "environment" {
+  source = "./modules/environment"
 }
 
-#----------------------------------------------------------------
-# Cluster
-#----------------------------------------------------------------
-
-resource "confluent_kafka_cluster" "bsnir-pipelines-standard-cluster" {
-  display_name = "bsnir_tf_standard_cluster"
-  availability = "SINGLE_ZONE"
-  cloud = var.cloud
+module "kafka" {
+  source = "./modules/kafka"
+  environment_id = module.environment.environment_id
+  cloud_provider = var.cloud_provider
   region = var.region
-  standard {}
-  environment {
-    id = confluent_environment.bsnir-pipelines-env.id
-  }
 }
 
-#----------------------------------------------------------------
-# Schema Registry
-#----------------------------------------------------------------
-
-data "confluent_schema_registry_cluster" "bsnir-pipelines-schema-registry" {
-  environment {
-    id = confluent_environment.bsnir-pipelines-env.id
-  }
+module "schema_registry" {
+  source = "./modules/schema_registry"
+  environment_id = module.environment.environment_id
 }
 
-#----------------------------------------------------------------
-# Compute Pool
-#----------------------------------------------------------------
-
-data "confluent_flink_region" "bsnir-pipelines-compute-pool-data" {
-  cloud   = "AWS"
-  region  = "eu-west-1"
+module "flink_compute_pool" {
+  source = "./modules/flink_compute_pool"
+  environment_id = module.environment.environment_id
+  cloud_provider = var.cloud_provider
+  region = var.region
+  max_cfu = 8
 }
 
-
-resource "confluent_flink_compute_pool" "bsnir-pipelines-compute-pool" {
-  display_name     = "bsnir-pipelines-compute-pool"
-  cloud            = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.cloud
-  region           = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.region
-  max_cfu          = 10
-  environment {
-    id = confluent_environment.bsnir-pipelines-env.id
-  }
+module "service_accounts" {
+  source = "./modules/service_accounts"
 }
 
-#----------------------------------------------------------------
-# Service Account                                                          
-#----------------------------------------------------------------
-
-resource "confluent_service_account" "bsnir-pipelines-connectors-service-account" {
-  display_name = "bsnir-pipelines-connectors-service-account"
-  description  = "Service account for application management"
+module "role_bindings" {
+  source = "./modules/role_bindings"
+  environment_id = module.environment.environment_id
+  kafka_cluster_id = module.kafka.kafka_cluster_id
+  kafka_resource_crn = module.kafka.kafka_resource_crn
+  kafka_cluster_sa_id = module.service_accounts.kafka_cluster_sa_id
+  schema_registry_sa_id = module.service_accounts.schema_registry_sa_id
+  schema_registry_resource_name = module.schema_registry.schema_registry_resource_name
+  role_sa_schema_registry = var.role_sa_schema_registry
+  role_sa_kafka = var.role_sa_kafka
 }
 
-resource "confluent_service_account" "bsnir-pipelines-schema-registry-service-account" {
-  display_name = "bsnir-pipelines-schema-registry-service-account"
-  description  = var.sr_api_key_description
-  depends_on = [
-    data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry
-  ]
+module "api_keys" {
+  source = "./modules/api_keys"
+  environment_id = module.environment.environment_id
+  kafka_cluster_object = module.kafka.kafka_cluster_object
+  kafka_sa_object = module.service_accounts.kafka_sa_object
+  schema_registry_sa_object = module.service_accounts.schema_registry_sa_object
+  flink_admin_sa_object = module.service_accounts.flink_admin_sa_object
+  schema_registry_object = module.schema_registry.schema_registry_object
+  flink_region_object = module.flink_compute_pool.flink_region_object
 }
-
-resource "confluent_service_account" "bsnir-pipelines-flink-admin-service-account" {
-  display_name = "bsnir-pipelines-flink-admin-service-account"
-  description  = var.flink_admin_service_account_description
-  depends_on = [
-    resource.confluent_flink_compute_pool.bsnir-pipelines-compute-pool
-  ]
-}
-
-
-
-
-#----------------------------------------------------------------
-#  Role bindings                                                        
-#----------------------------------------------------------------
-
-resource "confluent_role_binding" "bsnir-pipelines-connectors-service-account-role-binding" {
-  principal   = "User:${confluent_service_account.bsnir-pipelines-connectors-service-account.id}"
-  role_name   = "CloudClusterAdmin"
-  crn_pattern = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.rbac_crn
-}
-
-resource "confluent_role_binding" "bsnir-pipelines-schema-registry-service-account-role-binding" {
-  principal   = "User:${confluent_service_account.bsnir-pipelines-schema-registry-service-account.id}"
-  role_name   = "ResourceOwner"
-  crn_pattern = "${data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.resource_name}/subject=*"
-  depends_on = [
-    confluent_service_account.bsnir-pipelines-schema-registry-service-account,
-    data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry
-  ]
-}
-
-#----------------------------------------------------------------
-# API Keys                                                           
-#----------------------------------------------------------------
-resource "confluent_api_key" "bsnir-pipelines-connectors-service-account-api-key" {
-  display_name = "bsnir-pipelines-connectors-service-account-api-key"
-  description  = "API keys for connectors Read & Write"
-  owner {
-    id          = confluent_service_account.bsnir-pipelines-connectors-service-account.id
-    api_version = confluent_service_account.bsnir-pipelines-connectors-service-account.api_version
-    kind        = confluent_service_account.bsnir-pipelines-connectors-service-account.kind
-  }
-
-  managed_resource {
-    id          = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.id
-    api_version = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.api_version
-    kind        = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.kind
-
-    environment {
-      id = confluent_environment.bsnir-pipelines-env.id
-    }
-  }
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-resource "confluent_api_key" "bsnir-pipelines-schema-registry-service-account-api-key" {
-  display_name = "bsnir-pipelines-schema-registry-service-account-api-key"
-  description  = "API keys for schema MGMT"
-  owner {
-    id          = confluent_service_account.bsnir-pipelines-schema-registry-service-account.id
-    api_version = confluent_service_account.bsnir-pipelines-schema-registry-service-account.api_version
-    kind        = confluent_service_account.bsnir-pipelines-schema-registry-service-account.kind
-  }
-
-  managed_resource {
-    id          = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.id
-    api_version = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.api_version
-    kind        = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.kind
-    environment {
-      id = confluent_environment.bsnir-pipelines-env.id
-    }
-  }
-  depends_on = [
-    confluent_service_account.bsnir-pipelines-schema-registry-service-account,
-    data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry
-  ]
-}
-
-
-resource "confluent_api_key" "bsnir-pipelines-flink-service-account-api-key" {
-  display_name = "bsnir-pipelines-flink-service-account-api-key"
-  description  = "Flink API Key that is owned by 'env-manager' service account"
-  owner {
-    id          = confluent_service_account.bsnir-pipelines-flink-admin-service-account.id
-    api_version = confluent_service_account.bsnir-pipelines-flink-admin-service-account.api_version
-    kind        = confluent_service_account.bsnir-pipelines-flink-admin-service-account.kind
-  }
-
-  managed_resource {
-    id          = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.id
-    api_version = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.api_version
-    kind        = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.kind
-
-    environment {
-      id = confluent_environment.bsnir-pipelines-env.id
-    }
-  }
-}
-
-# module "sql" {
-#   source = "./sql"
-#   count  = var.enable_sql ? 1 : 0
-#   flink_api_key = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.id
-#   flink_api_secret = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.secret
-#   environment_id = confluent_environment.bsnir-pipelines-env.id
-#   environment_name = confluent_environment.bsnir-pipelines-env.display_name
-#   flink_service_account = confluent_service_account.bsnir-pipelines-flink-admin-service-account.id
-#   flink_compute_pool_id  = confluent_flink_compute_pool.bsnir-pipelines-compute-pool.id
-#   flink_rest_endpoint = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.rest_endpoint
-#   kafka_cluster_name = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.display_name
-# }

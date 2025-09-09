@@ -1,28 +1,23 @@
-variable "region" {
-  description = "Region for demo"
+variable region {
   type        = string
+  description = "ID for the Confluent environment"
   default     = "eu-west-1"
 }
 
-variable "cloud" {
-  description = "Cloud provider for demo"
+variable cloud_provider {
   type        = string
+  description = "ID for the Confluent environment"
   default     = "AWS"
 }
 
-variable sr_api_key_description {
-    description = "Region for the Kafka cluster"
-    type        = string
-    default     = "API keys for schema creation"
+variable role_sa_kafka {
+  type        = string
+  description = "The Role name to bind to the principal"
+  default     = "CloudClusterAdmin"
 }
 
-variable flink_admin_service_account_description {
-    description = "Flink Admin"
-    type        = string
-    default     = "API keys for schema creation"
-}
-
-variable enable_sql {
-  type    = bool
-  default = false
+variable role_sa_schema_registry {
+  type        = string
+  default     = "ResourceOwner"
+  description = "The Role name to bind to the principal"
 }

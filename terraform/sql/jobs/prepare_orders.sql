@@ -1,1 +1,0 @@
-ALTER TABLE `Orders` SET ('changelog.mode' = 'append');
