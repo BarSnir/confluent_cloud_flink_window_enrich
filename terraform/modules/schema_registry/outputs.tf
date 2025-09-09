@@ -9,5 +9,6 @@ output schema_registry_object {
       id          = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.id
       api_version = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.api_version
       kind        = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.kind
+      rest_endpoint = data.confluent_schema_registry_cluster.bsnir-pipelines-schema-registry.rest_endpoint
   }  
 }

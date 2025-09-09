@@ -32,7 +32,6 @@ module "flink_compute_pool" {
   environment_id = module.environment.environment_id
   cloud_provider = var.cloud_provider
   region = var.region
-  max_cfu = 8
 }
 
 module "service_accounts" {
