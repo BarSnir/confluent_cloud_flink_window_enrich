@@ -1,45 +1,32 @@
-terraform {
-  required_providers {
-    confluent = {
-      source  = "confluentinc/confluent"
-      version = "2.38.0"
-    }
-  }
-}
-# export CONFLUENT_CLOUD_API_KEY
-# export CONFLUENT_CLOUD_API_SECRET
-# export CONFLUENT_CLOUD_ORGANIZATION_ID
-provider "confluent" {}
-
 module "environment" {
-  source = "./modules/cores/environment"
+  source = "./environment"
 }
 
 module "kafka" {
-  source = "./modules/cores/kafka"
+  source = "./kafka"
   environment_id = module.environment.environment_id
   cloud_provider = var.cloud_provider
   region = var.region
 }
 
 module "schema_registry" {
-  source = "./modules/cores/schema_registry"
+  source = "./schema_registry"
   environment_id = module.environment.environment_id
 }
 
 module "flink_compute_pool" {
-  source = "./modules/cores/flink_compute_pool"
+  source = "./flink_compute_pool"
   environment_id = module.environment.environment_id
   cloud_provider = var.cloud_provider
   region = var.region
 }
 
 module "service_accounts" {
-  source = "./modules/cores/service_accounts"
+  source = "./service_accounts"
 }
 
 module "role_bindings" {
-  source = "./modules/cores/role_bindings"
+  source = "./role_bindings"
   environment_id = module.environment.environment_id
   kafka_cluster_id = module.kafka.kafka_cluster_id
   kafka_resource_crn = module.kafka.kafka_resource_crn
@@ -51,7 +38,7 @@ module "role_bindings" {
 }
 
 module "api_keys" {
-  source = "./modules/cores/api_keys"
+  source = "./api_keys"
   environment_id = module.environment.environment_id
   kafka_cluster_object = module.kafka.kafka_cluster_object
   kafka_sa_object = module.service_accounts.kafka_sa_object
@@ -60,17 +47,3 @@ module "api_keys" {
   schema_registry_object = module.schema_registry.schema_registry_object
   flink_region_object = module.flink_compute_pool.flink_region_object
 }
-
-
-module "cores" {
-  source  = "./modules/cores"
-  region     = var.region
-  cloud_provider = var.cloud_provider
-  role_sa_kafka = var.role_sa_kafka
-  role_sa_schema_registry = var.role_sa_schema_registry
-}
-
-module "sql" {
-  source  = "./modules/sql"
-}
-

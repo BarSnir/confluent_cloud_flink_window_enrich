@@ -45,7 +45,7 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 1. Terraform:
 - ```cd terraform```
 - ```terraform init```
-- ```terraform plan -out=standard_cc_env```
+- ```terraform plan -target=module.cores -out=standard_cc_env```
 - ```terraform apply standard_cc_env```
 - ```terraform output -json >> secrets.json```
 ! Don't forget:
