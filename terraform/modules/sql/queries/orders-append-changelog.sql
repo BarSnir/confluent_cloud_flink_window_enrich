@@ -1,0 +1,1 @@
+ALTER TABLE `bsnir_pipelines_env`.`bsnir_tf_standard_cluster`.`Orders` SET ('changelog.mode' = 'append');

@@ -21,3 +21,9 @@ variable role_sa_schema_registry {
   default     = "ResourceOwner"
   description = "The Role name to bind to the principal"
 }
+
+variable role_sa_flink_admin {
+  type        = string
+  default     = "EnvironmentAdmin"
+  description = "The Role name to bind to the principal"
+}

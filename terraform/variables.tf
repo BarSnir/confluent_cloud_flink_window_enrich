@@ -16,6 +16,12 @@ variable role_sa_kafka {
   default     = "CloudClusterAdmin"
 }
 
+variable role_sa_flink_admin {
+  type        = string
+  default     = "EnvironmentAdmin"
+  description = "The Role name to bind to the principal"
+}
+
 variable role_sa_schema_registry {
   type        = string
   default     = "ResourceOwner"

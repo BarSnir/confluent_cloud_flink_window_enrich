@@ -4,6 +4,12 @@ variable environment_id {
   default     = "bsnir-pipelines-env"
 }
 
+variable environment_resource_name {
+  type        = string
+  description = "Name for the Confluent environment"
+  default     = "bsnir-pipelines-env"
+}
+
 variable kafka_cluster_id {
   type        = string
   default     = ""
@@ -44,4 +50,16 @@ variable role_sa_schema_registry {
   type        = string
   default     = ""
   description = "The Role name to bind to the principal"
+}
+
+variable role_sa_flink_admin {
+  type        = string
+  default     = ""
+  description = "The Role name to bind to the principal"
+}
+
+variable flink_admin_sa_id {
+  type        = string
+  default     = ""
+  description = "Service account ID for Flink Admin"
 }

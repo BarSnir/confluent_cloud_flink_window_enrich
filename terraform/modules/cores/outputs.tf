@@ -1,3 +1,8 @@
+output "module_environment" {
+  description = "Environment ID"
+  value       = module.environment
+}
+
 output "module_kafka" {
   description = "Kafka Bootstrap Endpoint"
   value       = module.kafka
@@ -8,9 +13,19 @@ output "module_schema_registry" {
   value       = module.schema_registry
 }
 
+output "module_flink_compute_pool" {
+  description = "Flink Compute Pool"
+  value       = module.flink_compute_pool
+}
+
 output "module_api_keys" {
-  description = "Kafka Bootstrap Endpoint"
+  description = "API Keys"
   value       = module.api_keys
+}
+
+output "module_service_accounts" {
+  description = "Service Accounts"
+  value       = module.service_accounts
 }
 
 output "kafka_bootstrap_endpoint" {

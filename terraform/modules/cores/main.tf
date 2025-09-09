@@ -28,6 +28,7 @@ module "service_accounts" {
 module "role_bindings" {
   source = "./role_bindings"
   environment_id = module.environment.environment_id
+  environment_resource_name = module.environment.environment_resource_name
   kafka_cluster_id = module.kafka.kafka_cluster_id
   kafka_resource_crn = module.kafka.kafka_resource_crn
   kafka_cluster_sa_id = module.service_accounts.kafka_cluster_sa_id
@@ -35,6 +36,7 @@ module "role_bindings" {
   schema_registry_resource_name = module.schema_registry.schema_registry_resource_name
   role_sa_schema_registry = var.role_sa_schema_registry
   role_sa_kafka = var.role_sa_kafka
+  role_sa_flink_admin = var.role_sa_flink_admin
 }
 
 module "api_keys" {

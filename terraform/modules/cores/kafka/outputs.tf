@@ -19,5 +19,6 @@ output "kafka_cluster_object" {
     id   = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.id
     api_version = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.api_version
     kind   = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.kind
+    display_name = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.display_name 
   }
 }

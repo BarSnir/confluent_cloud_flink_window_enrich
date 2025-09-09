@@ -52,20 +52,28 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 ```export CONFLUENT_CLOUD_API_KEY=XXX```
 ```export CONFLUENT_CLOUD_API_SECRET=XXX```
 
-
-2. .env
+2. .env Set:
 - Create .env file contains values as in the .env.exmple
 - Please use the secrets.json to fill the details
 
 
-# Run
-1. docker compose up -d
-2. Inspect pyflink-client notes
+3. Compose:
+- docker compose up -d
+- Inspect pyflink-client notes
 
+4. Terraform (again): for SQL running
+- ```terraform plan -target=module.sql -out=sql```
+- ```terraform apply sql```
+
+5. Connect Elasticsearch, MinIO & Neo4j
+- 
 
 # SQLs
 ## Temporal Join construct:
-1. Change the Fact Source Table to ```append```
+1.  
+
+
+Change the Fact Source Table to ```append```
 ```
 ALTER TABLE `Orders` SET (
   'changelog.mode' = 'append'
