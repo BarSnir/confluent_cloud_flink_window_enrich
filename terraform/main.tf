@@ -11,6 +11,7 @@ terraform {
 }
 # export CONFLUENT_CLOUD_API_KEY
 # export CONFLUENT_CLOUD_API_SECRET
+# export CONFLUENT_ORGANIZATION_ID
 provider "confluent" {}
 
 #----------------------------------------------------------------
@@ -60,7 +61,7 @@ resource "confluent_flink_compute_pool" "bsnir-pipelines-compute-pool" {
   display_name     = "bsnir-pipelines-compute-pool"
   cloud            = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.cloud
   region           = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.region
-  max_cfu          = 5
+  max_cfu          = 10
   environment {
     id = confluent_environment.bsnir-pipelines-env.id
   }
@@ -185,3 +186,15 @@ resource "confluent_api_key" "bsnir-pipelines-flink-service-account-api-key" {
   }
 }
 
+# module "sql" {
+#   source = "./sql"
+#   count  = var.enable_sql ? 1 : 0
+#   flink_api_key = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.id
+#   flink_api_secret = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.secret
+#   environment_id = confluent_environment.bsnir-pipelines-env.id
+#   environment_name = confluent_environment.bsnir-pipelines-env.display_name
+#   flink_service_account = confluent_service_account.bsnir-pipelines-flink-admin-service-account.id
+#   flink_compute_pool_id  = confluent_flink_compute_pool.bsnir-pipelines-compute-pool.id
+#   flink_rest_endpoint = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.rest_endpoint
+#   kafka_cluster_name = confluent_kafka_cluster.bsnir-pipelines-standard-cluster.display_name
+# }

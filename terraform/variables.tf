@@ -21,3 +21,8 @@ variable flink_admin_service_account_description {
     type        = string
     default     = "API keys for schema creation"
 }
+
+variable enable_sql {
+  type    = bool
+  default = false
+}
