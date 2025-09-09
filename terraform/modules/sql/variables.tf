@@ -39,9 +39,3 @@ variable flink_api_secret {
   default     = ""
   description = " The Role name to bind to the principal"
 }
-
-variable ORG {
-  type        = string
-  default     = ""
-  description = " The Confluent Cloud Organization ID"
-}

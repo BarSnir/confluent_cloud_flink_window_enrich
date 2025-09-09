@@ -37,6 +37,7 @@ module "role_bindings" {
   role_sa_schema_registry = var.role_sa_schema_registry
   role_sa_kafka = var.role_sa_kafka
   role_sa_flink_admin = var.role_sa_flink_admin
+  flink_admin_sa_id = module.service_accounts.flink_admin_sa_object.id
 }
 
 module "api_keys" {

@@ -43,14 +43,16 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 
 # Installation
 1. Terraform:
+- ! Don't forget:
+```export CONFLUENT_CLOUD_API_KEY=XXX```
+```export CONFLUENT_CLOUD_API_SECRET=XXX``
+
 - ```cd terraform```
 - ```terraform init```
-- ```terraform plan -target=module.cores -out=standard_cc_env```
-- ```terraform apply standard_cc_env```
+- ```terraform plan -target=module.cores -out=cores```
+- ```terraform apply cores```
 - ```terraform output -json >> secrets.json```
-! Don't forget:
-```export CONFLUENT_CLOUD_API_KEY=XXX```
-```export CONFLUENT_CLOUD_API_SECRET=XXX```
+`
 
 2. .env Set:
 - Create .env file contains values as in the .env.exmple
@@ -62,11 +64,25 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - Inspect pyflink-client notes
 
 4. Terraform (again): for SQL running
+
+- Export required envs in terminal
+```
+export CONFLUENT_ORGANIZATION_ID="xxx" \
+CONFLUENT_ENVIRONMENT_ID="env-xxx" \
+FLINK_COMPUTE_POOL_ID="lfcp-xxx" \
+FLINK_PRINCIPAL_ID="sa-xxx" \
+FLINK_REST_ENDPOINT="https://flink.xxx.xxx.confluent.cloud" \
+FLINK_API_KEY="xxx" \
+FLINK_API_SECRET="xxx"
+```
+
 - ```terraform plan -target=module.sql -out=sql```
 - ```terraform apply sql```
 
 5. Connect Elasticsearch, MinIO & Neo4j
 - 
+
+6. Run the generator to see the Demo in action
 
 # SQLs
 ## Temporal Join construct:

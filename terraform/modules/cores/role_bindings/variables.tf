@@ -7,7 +7,7 @@ variable environment_id {
 variable environment_resource_name {
   type        = string
   description = "Name for the Confluent environment"
-  default     = "bsnir-pipelines-env"
+  default     = ""
 }
 
 variable kafka_cluster_id {

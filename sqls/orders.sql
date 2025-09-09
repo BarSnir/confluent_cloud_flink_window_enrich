@@ -28,8 +28,8 @@
 -- FROM Orders;
 
 
-ALTER TABLE `Orders` SET (
-  'changelog.mode' = 'append'
-);
+-- ALTER TABLE `Orders` SET (
+--   'changelog.mode' = 'append'
+-- );
 
 -- DROP TABLE orders_extract;
