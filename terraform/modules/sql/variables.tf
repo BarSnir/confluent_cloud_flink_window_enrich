@@ -39,3 +39,15 @@ variable flink_api_secret {
   default     = ""
   description = " The Role name to bind to the principal"
 }
+
+variable catalog {
+  type        = string
+  default     = "bsnir_pipelines_env"
+  description = "Catalog name for the SQL queries"
+}
+
+variable database {
+  type        = string
+  default     = "bsnir_tf_standard_cluster"
+  description = "Database name for the SQL queries"
+}

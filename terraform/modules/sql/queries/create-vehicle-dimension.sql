@@ -1,16 +1,16 @@
-CREATE TABLE vehicles_extract (
-    `OrderId` STRING,
+CREATE TABLE vehicle_table (
     `VehicleId` STRING,
     `KM` INT,
-    `PrevOwnerNumber` INT,
+    `PrevOwnerNumber` TINYINT,
+    `OrderId` STRING,
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
     `YearOnRoad` INT,
-    `TestDate` INT,
+    `TestDate` DATE,
     `ImproveId` INT,
-    PRIMARY KEY (`OrderId`) NOT ENFORCED
+    PRIMARY KEY (`VehicleId`) NOT ENFORCED
 ) WITH (
-  'changelog.mode'='retract',
+  'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',
   'scan.startup.mode' = 'earliest-offset'

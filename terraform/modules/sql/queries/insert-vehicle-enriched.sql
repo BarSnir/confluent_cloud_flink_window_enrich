@@ -1,0 +1,53 @@
+INSERT INTO vehicle_enriched
+SELECT
+  v.OrderId,
+  v.VehicleId,
+  v.KM,
+  v.PrevOwnerNumber,
+
+  v.MarketInfoId,
+  v.MediaTypeId,
+  v.YearOnRoad,
+  v.TestDate,
+  v.ImproveId,
+
+  ia.images_count,
+  ia.images_urls,
+
+  ip.StageLevel,
+  ip.StageText,
+  ip.PartsImprovedList,
+
+  mi.AirBags,
+  mi.SunRoof,
+  mi.MagnesiumWheels,
+  mi.ReversSensors,
+  mi.ABS,
+  mi.Hybrid,
+  mi.Doors,
+  mi.EnvironmentFriendlyLevel,
+  mi.SecurityTestLevel,
+  mi.ManufacturerId,
+  mi.ManufacturerText,
+  mi.ModelId,
+  mi.ModelText,
+  mi.SubModelId,
+  mi.SubModelText,
+  mi.FamilyTypeId,
+  mi.FamilyTypeText,
+  mi.Year,
+  mi.HorsePower,
+  mi.CruseControl,
+  mi.PowerWheel,
+  mi.FullyAutonomic,
+  mi.MarketPrice,
+
+  mt.AvailableDiskSlot,
+  mt.UsbSlotType,
+  mt.UsbSlots,
+  mt.IsTouchDisplay
+FROM vehicle_table v
+JOIN images_aggregate       AS ia ON ia.images_order_id = v.OrderId
+JOIN Improving_parts_table  AS ip ON ip.ImproveId       = v.ImproveId
+JOIN market_info_table      AS mi ON mi.MarketInfoId    = v.MarketInfoId
+JOIN media_type_table       AS mt ON mt.MediaTypeId     = v.MediaTypeId;
