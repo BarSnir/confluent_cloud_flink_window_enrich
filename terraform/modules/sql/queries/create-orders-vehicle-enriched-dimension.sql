@@ -12,7 +12,7 @@ CREATE TABLE orders_vehicle_enriched (
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
     `YearOnRoad` INT,
-    `TestDate` DATE,
+    `TestDate` INT,
     `ImproveId` INT,
 
     `images_count` BIGINT,

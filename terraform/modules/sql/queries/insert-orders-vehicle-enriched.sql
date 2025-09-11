@@ -27,7 +27,7 @@ SELECT
   ve.SunRoof,
   ve.MagnesiumWheels,
   ve.ReversSensors,
-  ve.ABS,
+  ve.`ABS`,
   ve.Hybrid,
   ve.Doors,
   ve.EnvironmentFriendlyLevel,
@@ -40,7 +40,7 @@ SELECT
   ve.SubModelText,
   ve.FamilyTypeId,
   ve.FamilyTypeText,
-  ve.Year,
+  ve.`Year`,
   ve.HorsePower,
   ve.CruseControl,
   ve.PowerWheel,
@@ -51,6 +51,6 @@ SELECT
   ve.UsbSlotType,
   ve.UsbSlots,
   ve.IsTouchDisplay
-FROM Orders
+FROM Orders o
 JOIN vehicle_enriched FOR SYSTEM_TIME AS OF o.`$rowtime` AS ve
 ON ve.OrderId = o.OrderId;

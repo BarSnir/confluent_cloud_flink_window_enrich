@@ -6,7 +6,7 @@ CREATE TABLE vehicle_table (
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
     `YearOnRoad` INT,
-    `TestDate` DATE,
+    `TestDate` INT,
     `ImproveId` INT,
     PRIMARY KEY (`VehicleId`) NOT ENFORCED
 ) WITH (

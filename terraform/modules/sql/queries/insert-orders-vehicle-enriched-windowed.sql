@@ -27,7 +27,7 @@ SELECT
   ove.SunRoof,
   ove.MagnesiumWheels,
   ove.ReversSensors,
-  ove.ABS,
+  ove.`ABS`,
   ove.Hybrid,
   ove.Doors,
   ove.EnvironmentFriendlyLevel,
@@ -40,7 +40,7 @@ SELECT
   ove.SubModelText,
   ove.FamilyTypeId,
   ove.FamilyTypeText,
-  ove.Year,
+  ove.`Year`,
   ove.HorsePower,
   ove.CruseControl,
   ove.PowerWheel,
@@ -56,5 +56,5 @@ SELECT
   cal.window_end,
   cal.customer_total_assets
 FROM orders_vehicle_enriched ove
-JOIN customer_agg_5m FOR SYSTEM_TIME AS OF o.`$rowtime` AS cal
+JOIN customer_agg_5m FOR SYSTEM_TIME AS OF ove.`$rowtime` AS cal
 ON ove.CustomerId = cal.CustomerId;

@@ -62,6 +62,18 @@ resource "confluent_flink_statement" "create-vehicle-dimension-statement" {
   }
 }
 
+resource "confluent_flink_statement" "insert-vehicle-dimension-statement" {
+  statement  = trimspace(file("${path.module}/queries/insert-vehicle-dimension.sql"))
+  properties = {
+    "sql.current-catalog"  = var.catalog
+    "sql.current-database" = var.database
+  }
+  depends_on = [
+    confluent_flink_statement.create-vehicle-dimension-statement
+  ]
+}
+
+
 resource "confluent_flink_statement" "create-vehicle-enriched-dimension-statement" {
   statement  = trimspace(file("${path.module}/queries/create-vehicle-enriched-dimension.sql"))
   properties = {

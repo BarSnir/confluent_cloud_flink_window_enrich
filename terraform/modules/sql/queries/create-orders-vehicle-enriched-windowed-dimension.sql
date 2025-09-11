@@ -12,7 +12,7 @@ CREATE TABLE orders_vehicle_enriched_windowed (
   `MarketInfoId` STRING,
   `MediaTypeId` INT,
   `YearOnRoad` INT,
-  `TestDate` DATE,
+  `TestDate` INT,
   `ImproveId` INT,
 
   `images_count` BIGINT,
@@ -53,7 +53,7 @@ CREATE TABLE orders_vehicle_enriched_windowed (
 
   `window_start` TIMESTAMP(3),
   `window_end`   TIMESTAMP(3),
-  `customer_total_assets` BIGINT
+  `customer_total_assets` DECIMAL(18, 2)
 ) WITH (
   'changelog.mode'='append',
   'kafka.cleanup-policy'='delete',

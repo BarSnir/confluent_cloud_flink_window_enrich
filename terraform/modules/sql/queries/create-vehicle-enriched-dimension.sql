@@ -1,17 +1,17 @@
 CREATE TABLE vehicle_enriched (
+    `OrderId` STRING,
     `VehicleId` STRING,
     `KM` INT,
     `PrevOwnerNumber` TINYINT,
-    `OrderId` STRING,
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
     `YearOnRoad` INT,
-    `TestDate` DATE,
+    `TestDate` INT,
     `ImproveId` INT,
 
     -- Images aggregate
     `images_count` BIGINT,
-    `images_urls` STRING,
+    `images_urls` ARRAY<STRING>,
 
     -- Improving parts
     `StageLevel` TINYINT,
@@ -49,7 +49,7 @@ CREATE TABLE vehicle_enriched (
     `UsbSlots` INT,
     `IsTouchDisplay` INT,
 
-    PRIMARY KEY (`VehicleId`) NOT ENFORCED
+    PRIMARY KEY (`OrderId`) NOT ENFORCED
 ) WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
