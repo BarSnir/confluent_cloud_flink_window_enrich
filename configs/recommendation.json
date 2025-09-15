@@ -25,7 +25,7 @@
         "transforms.extractInt.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
         "transforms.extractInt.field": "OrderId",
         "transforms.ts.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-        "transforms.ts.field":"es_sink_timestamp",
+        "transforms.ts.field":"neo4j_sink_timestamp",
         "transforms.ts.target.type":"string",
         "transforms.ts.format":"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
         "transforms.ts2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
