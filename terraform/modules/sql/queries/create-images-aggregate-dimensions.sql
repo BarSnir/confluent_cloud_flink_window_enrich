@@ -3,7 +3,9 @@ CREATE TABLE images_aggregate (
     `images_count` BIGINT,
     `images_urls` ARRAY<STRING>,
     PRIMARY KEY (`images_order_id`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

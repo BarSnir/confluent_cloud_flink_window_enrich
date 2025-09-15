@@ -50,7 +50,11 @@ SELECT
   ve.AvailableDiskSlot,
   ve.UsbSlotType,
   ve.UsbSlots,
-  ve.IsTouchDisplay
+  ve.IsTouchDisplay,
+  CONCAT(ct.FirstName, '_', ct.LastName) as CustomerName,
+  ct.Email as CustomerEmail
 FROM Orders o
 JOIN vehicle_enriched FOR SYSTEM_TIME AS OF o.`$rowtime` AS ve
-ON ve.OrderId = o.OrderId;
+ON ve.OrderId = o.OrderId
+JOIN customer_table FOR SYSTEM_TIME AS OF o.`$rowtime` AS ct
+ON ct.CustomerId = o.CustomerId;

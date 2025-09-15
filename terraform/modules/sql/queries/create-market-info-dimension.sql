@@ -1,12 +1,12 @@
 CREATE TABLE market_info_table (
     `MarketInfoId` STRING,
     `AirBags` INT,
-    `SunRoof` TINYINT,
-    `MagnesiumWheels` TINYINT,
-    `ReversSensors` TINYINT,
-    `ABS` TINYINT,
-    `Hybrid` TINYINT,
-    `Doors` TINYINT,
+    `SunRoof` SMALLINT,
+    `MagnesiumWheels` SMALLINT,
+    `ReversSensors` SMALLINT,
+    `ABS` SMALLINT,
+    `Hybrid` SMALLINT,
+    `Doors` SMALLINT,
     `EnvironmentFriendlyLevel` INT,
     `SecurityTestLevel` INT,
     `ManufacturerId` INT,
@@ -19,12 +19,14 @@ CREATE TABLE market_info_table (
     `FamilyTypeText` STRING,
     `Year` INT,
     `HorsePower` INT,
-    `CruseControl` TINYINT,
-    `PowerWheel` TINYINT,
-    `FullyAutonomic` TINYINT,
+    `CruseControl` SMALLINT,
+    `PowerWheel` SMALLINT,
+    `FullyAutonomic` SMALLINT,
     `MarketPrice` INT,
     PRIMARY KEY (`MarketInfoId`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

@@ -45,6 +45,7 @@ SELECT
   mt.UsbSlotType,
   mt.UsbSlots,
   mt.IsTouchDisplay
+  
 FROM vehicle_table v
 JOIN images_aggregate       AS ia ON ia.images_order_id = v.OrderId
 JOIN improving_parts_table  AS ip ON ip.ImproveId       = v.ImproveId

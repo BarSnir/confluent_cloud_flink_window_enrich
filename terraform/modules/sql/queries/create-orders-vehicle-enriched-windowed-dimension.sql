@@ -7,7 +7,7 @@ CREATE TABLE orders_vehicle_enriched_windowed (
 
   `VehicleId` STRING,
   `KM` INT,
-  `PrevOwnerNumber` TINYINT,
+  `PrevOwnerNumber` SMALLINT,
 
   `MarketInfoId` STRING,
   `MediaTypeId` INT,
@@ -18,17 +18,17 @@ CREATE TABLE orders_vehicle_enriched_windowed (
   `images_count` BIGINT,
   `images_urls` ARRAY<STRING>,
 
-  `StageLevel` TINYINT,
+  `StageLevel` SMALLINT,
   `StageText` STRING,
   `PartsImprovedList` STRING,
 
   `AirBags` INT,
-  `SunRoof` TINYINT,
-  `MagnesiumWheels` TINYINT,
-  `ReversSensors` TINYINT,
-  `ABS` TINYINT,
-  `Hybrid` TINYINT,
-  `Doors` TINYINT,
+  `SunRoof` SMALLINT,
+  `MagnesiumWheels` SMALLINT,
+  `ReversSensors` SMALLINT,
+  `ABS` SMALLINT,
+  `Hybrid` SMALLINT,
+  `Doors` SMALLINT,
   `EnvironmentFriendlyLevel` INT,
   `SecurityTestLevel` INT,
   `ManufacturerId` INT,
@@ -41,9 +41,9 @@ CREATE TABLE orders_vehicle_enriched_windowed (
   `FamilyTypeText` STRING,
   `Year` INT,
   `HorsePower` INT,
-  `CruseControl` TINYINT,
-  `PowerWheel` TINYINT,
-  `FullyAutonomic` TINYINT,
+  `CruseControl` SMALLINT,
+  `PowerWheel` SMALLINT,
+  `FullyAutonomic` SMALLINT,
   `MarketPrice` INT,
 
   `AvailableDiskSlot` INT,
@@ -53,8 +53,10 @@ CREATE TABLE orders_vehicle_enriched_windowed (
 
   `window_start` TIMESTAMP(3),
   `window_end`   TIMESTAMP(3),
-  `customer_total_assets` DECIMAL(18, 2)
-) WITH (
+  `customer_total_assets` INT
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='append',
   'kafka.cleanup-policy'='delete',
   'value.format' = 'avro-registry',

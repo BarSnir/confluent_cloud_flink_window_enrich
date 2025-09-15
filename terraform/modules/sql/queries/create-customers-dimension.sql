@@ -5,14 +5,16 @@ CREATE TABLE customer_table (
     `Email` STRING,
     `CustomerTypeId` INT,
     `CustomerTypeText` STRING,
-    `JoinDate` DATE,
+    `JoinDate` INT,
     `ProfileImage` STRING,
     `IsSuspended` INT,
     `SuspendedReasonId` INT,
     `SuspendedReasonText` STRING,
     `AuthTypeId` INT,
     PRIMARY KEY (`CustomerId`) NOT ENFORCED
-) WITH (
+)
+DISTRIBUTED INTO 1 BUCKETS 
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

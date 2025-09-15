@@ -2,7 +2,7 @@ CREATE TABLE vehicle_enriched (
     `OrderId` STRING,
     `VehicleId` STRING,
     `KM` INT,
-    `PrevOwnerNumber` TINYINT,
+    `PrevOwnerNumber` SMALLINT,
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
     `YearOnRoad` INT,
@@ -14,18 +14,18 @@ CREATE TABLE vehicle_enriched (
     `images_urls` ARRAY<STRING>,
 
     -- Improving parts
-    `StageLevel` TINYINT,
+    `StageLevel` SMALLINT,
     `StageText` STRING,
     `PartsImprovedList` STRING,
 
     -- Market info
     `AirBags` INT,
-    `SunRoof` TINYINT,
-    `MagnesiumWheels` TINYINT,
-    `ReversSensors` TINYINT,
-    `ABS` TINYINT,
-    `Hybrid` TINYINT,
-    `Doors` TINYINT,
+    `SunRoof` SMALLINT,
+    `MagnesiumWheels` SMALLINT,
+    `ReversSensors` SMALLINT,
+    `ABS` SMALLINT,
+    `Hybrid` SMALLINT,
+    `Doors` SMALLINT,
     `EnvironmentFriendlyLevel` INT,
     `SecurityTestLevel` INT,
     `ManufacturerId` INT,
@@ -38,9 +38,9 @@ CREATE TABLE vehicle_enriched (
     `FamilyTypeText` STRING,
     `Year` INT,
     `HorsePower` INT,
-    `CruseControl` TINYINT,
-    `PowerWheel` TINYINT,
-    `FullyAutonomic` TINYINT,
+    `CruseControl` SMALLINT,
+    `PowerWheel` SMALLINT,
+    `FullyAutonomic` SMALLINT,
     `MarketPrice` INT,
 
     -- Media type
@@ -50,7 +50,9 @@ CREATE TABLE vehicle_enriched (
     `IsTouchDisplay` INT,
 
     PRIMARY KEY (`OrderId`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

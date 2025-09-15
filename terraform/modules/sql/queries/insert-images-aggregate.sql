@@ -3,5 +3,5 @@ SELECT
   OrderId AS images_order_id,
   COUNT(*) AS images_count,
   ARRAY_AGG(Url) AS images_urls
-FROM images_table
+FROM Images
 GROUP BY OrderId;

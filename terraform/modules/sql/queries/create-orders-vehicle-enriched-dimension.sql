@@ -7,7 +7,7 @@ CREATE TABLE orders_vehicle_enriched (
 
     `VehicleId` STRING,
     `KM` INT,
-    `PrevOwnerNumber` TINYINT,
+    `PrevOwnerNumber` SMALLINT,
 
     `MarketInfoId` STRING,
     `MediaTypeId` INT,
@@ -18,17 +18,17 @@ CREATE TABLE orders_vehicle_enriched (
     `images_count` BIGINT,
     `images_urls` ARRAY<STRING>,
 
-    `StageLevel` TINYINT,
+    `StageLevel` SMALLINT,
     `StageText` STRING,
     `PartsImprovedList` STRING,
 
     `AirBags` INT,
-    `SunRoof` TINYINT,
-    `MagnesiumWheels` TINYINT,
-    `ReversSensors` TINYINT,
-    `ABS` TINYINT,
-    `Hybrid` TINYINT,
-    `Doors` TINYINT,
+    `SunRoof` SMALLINT,
+    `MagnesiumWheels` SMALLINT,
+    `ReversSensors` SMALLINT,
+    `ABS` SMALLINT,
+    `Hybrid` SMALLINT,
+    `Doors` SMALLINT,
     `EnvironmentFriendlyLevel` INT,
     `SecurityTestLevel` INT,
     `ManufacturerId` INT,
@@ -41,16 +41,20 @@ CREATE TABLE orders_vehicle_enriched (
     `FamilyTypeText` STRING,
     `Year` INT,
     `HorsePower` INT,
-    `CruseControl` TINYINT,
-    `PowerWheel` TINYINT,
-    `FullyAutonomic` TINYINT,
+    `CruseControl` SMALLINT,
+    `PowerWheel` SMALLINT,
+    `FullyAutonomic` SMALLINT,
     `MarketPrice` INT,
 
     `AvailableDiskSlot` INT,
     `UsbSlotType` STRING,
     `UsbSlots` INT,
-    `IsTouchDisplay` INT
-) WITH (
+    `IsTouchDisplay` INT,
+    `CustomerName` STRING,
+    `CustomerEmail` STRING
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='append',
   'kafka.cleanup-policy'='delete',
   'value.format' = 'avro-registry',

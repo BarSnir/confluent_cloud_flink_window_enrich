@@ -1,0 +1,27 @@
+INSERT INTO market_info_table
+SELECT
+    `MarketInfoId`,
+    `AirBags` ,
+    `SunRoof`,
+    `MagnesiumWheels`,
+    `ReversSensors`,
+    `ABS`,
+    `Hybrid`,
+    `Doors`,
+    `EnvironmentFriendlyLevel` ,
+    `SecurityTestLevel` ,
+    `ManufacturerId` ,
+    `ManufacturerText`,
+    `ModelId` ,
+    `ModelText`,
+    `SubModelId` ,
+    `SubModelText`,
+    `FamilyTypeId` ,
+    `FamilyTypeText`,
+    `Year` ,
+    `HorsePower` ,
+    `CruseControl`,
+    `PowerWheel`,
+    `FullyAutonomic`,
+    `MarketPrice`
+FROM MarketInfo;

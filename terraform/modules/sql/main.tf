@@ -14,6 +14,18 @@ resource "confluent_flink_statement" "create-customers-dimension-statement" {
   }
 }
 
+resource "confluent_flink_statement" "insert-customers-dimension-statement" {
+  statement  = trimspace(file("${path.module}/queries/insert-customers.sql"))
+  statement_name = "insert-customers"
+  properties = {
+    "sql.current-catalog"  = var.catalog
+    "sql.current-database" = var.database
+  }
+  depends_on = [
+    confluent_flink_statement.create-customers-dimension-statement
+  ]
+}
+
 resource "confluent_flink_statement" "create-images-dimensions-statement" {
   statement  = trimspace(file("${path.module}/queries/create-images-dimensions.sql"))
   properties = {
@@ -38,12 +50,37 @@ resource "confluent_flink_statement" "create-improving-parts-dimension-statement
   }
 }
 
+resource "confluent_flink_statement" "insert-improving-parts-dimension-statement" {
+  statement  = trimspace(file("${path.module}/queries/insert-improving-parts.sql"))
+  statement_name = "insert-improving-parts"
+  properties = {
+    "sql.current-catalog"  = var.catalog
+    "sql.current-database" = var.database
+  }
+  depends_on = [
+    confluent_flink_statement.create-improving-parts-dimension-statement
+  ]
+}
+
+
 resource "confluent_flink_statement" "create-market-info-dimension-statement" {
   statement  = trimspace(file("${path.module}/queries/create-market-info-dimension.sql"))
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
   }
+}
+ 
+resource "confluent_flink_statement" "insert-market-info-dimension-statement" {
+  statement  = trimspace(file("${path.module}/queries/insert-market-info.sql"))
+  statement_name = "insert-market-info"
+  properties = {
+    "sql.current-catalog"  = var.catalog
+    "sql.current-database" = var.database
+  }
+  depends_on = [
+    confluent_flink_statement.create-market-info-dimension-statement
+  ]
 }
 
 resource "confluent_flink_statement" "create-media-type-dimension-statement" {
@@ -52,6 +89,18 @@ resource "confluent_flink_statement" "create-media-type-dimension-statement" {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
   }
+}
+
+resource "confluent_flink_statement" "insert-media-type-dimension-statement" {
+  statement  = trimspace(file("${path.module}/queries/insert-media-type.sql"))
+  statement_name = "insert-media-type"
+  properties = {
+    "sql.current-catalog"  = var.catalog
+    "sql.current-database" = var.database
+  }
+  depends_on = [
+    confluent_flink_statement.create-media-type-dimension-statement
+  ]
 }
 
 resource "confluent_flink_statement" "create-vehicle-dimension-statement" {
@@ -64,6 +113,7 @@ resource "confluent_flink_statement" "create-vehicle-dimension-statement" {
 
 resource "confluent_flink_statement" "insert-vehicle-dimension-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-vehicle-dimension.sql"))
+  statement_name = "insert-vehicle-dimension"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
@@ -84,6 +134,7 @@ resource "confluent_flink_statement" "create-vehicle-enriched-dimension-statemen
 
 resource "confluent_flink_statement" "insert-images-aggregate-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-images-aggregate.sql"))
+  statement_name = "insert-images-aggregate"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
@@ -96,6 +147,7 @@ resource "confluent_flink_statement" "insert-images-aggregate-statement" {
 
 resource "confluent_flink_statement" "insert-vehicle-enriched-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-vehicle-enriched.sql"))
+  statement_name = "insert-vehicle-enriched"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
@@ -121,6 +173,7 @@ resource "confluent_flink_statement" "create-orders-vehicle-enriched-dimension-s
 
 resource "confluent_flink_statement" "insert-orders-vehicle-enriched-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-orders-vehicle-enriched.sql"))
+  statement_name = "insert-orders-vehicle-enriched"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
@@ -142,6 +195,7 @@ resource "confluent_flink_statement" "create-customer-agg-5m-dimension-statement
 
 resource "confluent_flink_statement" "insert-customer-agg-5m-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-customer-agg-5m.sql"))
+  statement_name = "insert-customer-agg-5m"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database
@@ -162,6 +216,7 @@ resource "confluent_flink_statement" "create-orders-vehicle-enriched-windowed-di
 
 resource "confluent_flink_statement" "insert-orders-vehicle-enriched-windowed-statement" {
   statement  = trimspace(file("${path.module}/queries/insert-orders-vehicle-enriched-windowed.sql"))
+  statement_name = "insert-orders-vehicle-enriched-windowed"
   properties = {
     "sql.current-catalog"  = var.catalog
     "sql.current-database" = var.database

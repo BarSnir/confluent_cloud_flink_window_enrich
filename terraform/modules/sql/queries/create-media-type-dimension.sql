@@ -5,7 +5,9 @@ CREATE TABLE media_type_table (
     `UsbSlots` INT,
     `IsTouchDisplay` INT,
     PRIMARY KEY (`MediaTypeId`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

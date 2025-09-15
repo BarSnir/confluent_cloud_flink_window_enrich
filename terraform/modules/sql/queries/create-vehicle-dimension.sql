@@ -9,7 +9,9 @@ CREATE TABLE vehicle_table (
     `TestDate` INT,
     `ImproveId` INT,
     PRIMARY KEY (`VehicleId`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

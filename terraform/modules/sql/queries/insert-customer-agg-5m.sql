@@ -3,7 +3,7 @@ SELECT
   CustomerId,
   LAST_VALUE(window_start) window_start,
   LAST_VALUE(window_end) window_end,
-  SUM(Price) AS customer_total_assets
+  CAST(SUM(Price) AS INT)  AS customer_total_assets
 FROM TABLE(
   TUMBLE(TABLE Orders, DESCRIPTOR($rowtime), INTERVAL '5' MINUTES)
 )

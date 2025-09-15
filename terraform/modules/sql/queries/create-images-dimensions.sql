@@ -4,7 +4,9 @@ CREATE TABLE images_table (
     `Url` STRING,
     `Priority` INT,
     PRIMARY KEY (`ImageId`) NOT ENFORCED
-) WITH (
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',

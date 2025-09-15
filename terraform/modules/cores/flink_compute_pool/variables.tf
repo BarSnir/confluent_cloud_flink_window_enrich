@@ -16,5 +16,5 @@ variable region {
 variable max_cfu {
   type        = number
   description = "ID for the Confluent environment"
-  default     = 10
+  default     = 20
 }
