@@ -2,7 +2,7 @@
     "batch": {
         "host": "jobmanager",
         "port:": "8081",
-        "process_list": [
+        "process_list_full": [
             "generate_market_info",
             "generate_vehicles",
             "generate_orders",
@@ -12,6 +12,10 @@
             "generate_improves",
             "generate_media_type",
             "generate_statuses"
+        ],
+        "process_list_orders_generator": [
+            "generate_vehicles",
+            "generate_orders"
         ],
         "process_command": [
             "./bin/flink",

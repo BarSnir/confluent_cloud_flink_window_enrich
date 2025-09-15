@@ -53,7 +53,8 @@ CREATE TABLE orders_vehicle_enriched_windowed (
 
   `window_start` TIMESTAMP(3),
   `window_end`   TIMESTAMP(3),
-  `customer_total_assets` INT
+  `customer_total_assets` INT,
+  `pipeline_start` TIMESTAMP_LTZ(3)
 ) 
 DISTRIBUTED INTO 1 BUCKETS
 WITH (

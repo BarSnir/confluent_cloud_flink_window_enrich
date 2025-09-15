@@ -54,7 +54,8 @@ SELECT
 
   cal.window_start,
   cal.window_end,
-  cal.customer_total_assets
+  cal.customer_total_assets,
+  ove.pipeline_start
 FROM orders_vehicle_enriched ove
 JOIN customer_agg_5m FOR SYSTEM_TIME AS OF ove.`$rowtime` AS cal
 ON ove.CustomerId = cal.CustomerId;

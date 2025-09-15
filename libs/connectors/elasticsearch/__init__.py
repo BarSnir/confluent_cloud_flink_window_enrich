@@ -19,6 +19,7 @@ class ElasticsearchConnector:
             )
         except requests.exceptions.RequestException as e:
             logger.critical(e)
+            raise e
 
 
     

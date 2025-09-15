@@ -7,13 +7,24 @@ from steps import (
     process_s3_connector,
     process_neo4j_connector
 )
+import os
+
+
+def main():
+    PROCESS_STEP = os.getenv("PROCESS_STEP", "")
+    logger = ColorLogger("event_driven_freedom").get_logger()
+    # your app logic:
+    if PROCESS_STEP == "load_dataset":
+        setup_database.process(logger)
+        process_batch_dataset.process(logger, "process_list_full")
+    if PROCESS_STEP == "generate_orders":
+        process_batch_dataset.process(logger, "process_list_orders_generator")
+    elif PROCESS_STEP == "create_debezium":
+        process_debezium.process(logger)
+    elif PROCESS_STEP == "create_target_connectors":
+        process_elasticsearch_connector.process(logger)
+        process_s3_connector.process(logger)
+        process_neo4j_connector.process(logger)
 
 if __name__ == "__main__":
-    logger = ColorLogger("event_driven_freedom").get_logger()
-    # setup_database.process(logger)
-    process_batch_dataset.process(logger)
-    # process_debezium.process(logger)
-    # process_elasticsearch_connector.process(logger)
-    # process_s3_connector.process(logger)
-    # process_neo4j_connector.process(logger)
-    logger.info("Done, thank you for given freedom to your data!")
+    main()

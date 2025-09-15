@@ -91,6 +91,7 @@ services:
     command: >
       bash -c  "python ./project/main.py"
     environment:
+    - PROCESS_STEP=create_target_connectors
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
@@ -218,7 +219,10 @@ services:
       CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
     command: > 
       bash -c "
-      confluent-hub install --no-prompt debezium/debezium-connector-mysql:2.4.2 && \
+      confluent-hub install --no-prompt debezium/debezium-connector-mysql:2.2.1 && \
+      confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:14.0.12 && \
+      confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.5.9 && \
+      confluent-hub install --no-prompt neo4j/kafka-connect-neo4j:5.0.4 && \
       /etc/confluent/docker/run"
 volumes:
   my_db:

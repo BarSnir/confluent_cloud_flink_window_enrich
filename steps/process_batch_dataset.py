@@ -4,7 +4,7 @@ from libs.utils.logger import ColorLogger
 
 MODULE_MESSAGE = 'Step B || Generating datasets with Apache Flink batch operations!'
 
-def process(logger):
+def process(logger, list_type):
     time.sleep(10)
     ColorLogger.log_new_step_dashes(logger)
     logger.info(MODULE_MESSAGE)
@@ -16,7 +16,7 @@ def process(logger):
             if os.getenv('LOG_LEVEL') == 'DEBUG':
                 null_logging = None
             process_config_files = json.load(process_config_file).get('batch')
-            process_list = process_config_files.get('process_list')
+            process_list = process_config_files.get(list_type)
             process_sum = len(process_list)
             for process in process_list:
                 index = process_list.index(process) + 1

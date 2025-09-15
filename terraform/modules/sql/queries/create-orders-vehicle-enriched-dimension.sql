@@ -51,7 +51,8 @@ CREATE TABLE orders_vehicle_enriched (
     `UsbSlots` INT,
     `IsTouchDisplay` INT,
     `CustomerName` STRING,
-    `CustomerEmail` STRING
+    `CustomerEmail` STRING,
+    `pipeline_start` TIMESTAMP_LTZ(3) METADATA FROM 'timestamp' VIRTUAL
 ) 
 DISTRIBUTED INTO 1 BUCKETS
 WITH (
