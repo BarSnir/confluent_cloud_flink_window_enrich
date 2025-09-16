@@ -7,3 +7,10 @@ output flink_region_object {
     rest_endpoint = data.confluent_flink_region.bsnir-pipelines-compute-pool-data.rest_endpoint
   }
 }
+
+output flink_compute_pool {
+  description = "Flink Compute Pool Object"
+  value = {
+    id = confluent_flink_compute_pool.bsnir-pipelines-compute-pool.id
+  }
+}
