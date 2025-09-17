@@ -71,3 +71,14 @@ output "flink_api_secret" {
   value       = module.api_keys.flink_api_secret
   sensitive   = true
 }
+
+output "monitoring_api_key_id" {
+  value       = module.api_keys.monitoring_api_key_id
+  description = "Monitoring service account API key id (re-export from api_keys module)"
+}
+
+output "monitoring_api_key_secret" {
+  value       = module.api_keys.monitoring_api_key_secret
+  description = "Monitoring service account API key secret (sensitive) (re-export from api_keys module)"
+  sensitive   = true
+}

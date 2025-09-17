@@ -10,9 +10,9 @@ scrape_configs:
       - targets: ["api.telemetry.confluent.cloud"]
     scheme: https
     basic_auth:
-      username: "${CCLOUD_API_FLINK}"
-      password: "${CCLOUD_API_SECRET_FLINK}"
+      username: "LMY4BMZ24ZL7J6MU"
+      password: "cflt4EBQjtoq0VrBxRO2uidpAuFkuqkWYqrdgmrqWPjbPmE78I4uLQaF1q7GlJbw"
     metrics_path: /v2/metrics/cloud/export
     params:
       resource_compute_pool_id:
-        - "${CCLOUD_COMPUTE_POOL_IDS}"
+        - "lfcp-pvx0xk"

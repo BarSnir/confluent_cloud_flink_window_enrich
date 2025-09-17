@@ -10,6 +10,12 @@ def generate_env_file(org_id):
             env_file.write(f"CCLOUD_SCHEMA_REGISTRY_URL={fetch_secret_value(secrets, 'schema_registry_rest_endpoint')}\n")
             env_file.write(f"CCLOUD_SCHEMA_REGISTRY_API_KEY={fetch_secret_value(secrets, 'schema_registry_api_key')}\n")
             env_file.write(f"CCLOUD_SCHEMA_REGISTRY_API_SECRET={fetch_secret_value(secrets, 'schema_registry_api_secret')}\n")
+            env_file.write(f"CCLOUD_MONITORING_API_KEY_ID={fetch_secret_value(secrets, 'monitoring_api_key_id')}\n")
+            env_file.write(f"CCLOUD_MONITORING_API_KEY_SECRET={fetch_secret_value(secrets, 'monitoring_api_key_secret')}\n")
+            env_file.write(f"CCLOUD_API_FLINK_SECRET={fetch_secret_value(secrets, 'flink_api_secret')}\n")
+            env_file.write(f"CCLOUD_COMPUTE_POOL_IDS={fetch_secret_value(secrets, 'flink_compute_pool_id')}\n")
+            env_file.write(f"CONFLUENT_ENVIRONMENT_ID={fetch_secret_value(secrets, 'environment_id')}\n")
+
             print("Before Running the next terraform stage, pase this in your terminal:")
             terminal_message = rf"""
 export CCLOUD_BROKER_HOST={get_broker_host(secrets)} \
@@ -22,13 +28,20 @@ CONFLUENT_ENVIRONMENT_ID={fetch_secret_value(secrets, 'environment_id')} \
 CONFLUENT_ORGANIZATION_ID={org_id}    
             """
             print(terminal_message)
+            return secrets
 
-            env_file.write(f"n")
-            env_file.write(f"n")
-            env_file.write(f"n")
-            env_file.write(f"n")
-            env_file.write(f"n")
-            env_file.write(f"CONFLUENT_ENVIRONMENT_ID={fetch_secret_value(secrets, 'environment_id')}\n")
+def generate_prometheus_yaml(secrets):
+    with open("./prometheus/prometheus.yml", "r") as prometheus_file:
+        prometheus_content = prometheus_file.read()
+        with open("./prometheus/prometheus.yml", "w") as new_prometheus_file:
+            new_prometheus_file.write(
+                prometheus_content \
+                .replace("xxCCLOUD_MONITORING_API_KEY_ID", f"{fetch_secret_value(secrets, 'monitoring_api_key_id')}") \
+                .replace("xxCCLOUD_MONITORING_API_KEY_SECRET", f"{fetch_secret_value(secrets, 'monitoring_api_key_secret')}") \
+                .replace("xxCCLOUD_COMPUTE_POOL_IDS", f"{fetch_secret_value(secrets, 'flink_compute_pool_id')}")
+            )
+
+
 
 def fetch_secret_value(secrets, key):
     return secrets.get(key).get('value')
@@ -46,4 +59,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not args.org_id:
         raise ValueError("org_id is required")
-    generate_env_file(args.org_id)
+    secrets = generate_env_file(args.org_id)
+    generate_prometheus_yaml(secrets)

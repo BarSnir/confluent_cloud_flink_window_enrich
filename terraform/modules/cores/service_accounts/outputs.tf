@@ -33,3 +33,17 @@ output flink_admin_sa_object {
     kind        = confluent_service_account.bsnir-pipelines-flink-admin-service-account.kind
   }
 }
+
+output "monitoring_service_account_id" {
+  value       = confluent_service_account.monitoring.id
+  description = "ID of the monitoring service account"
+}
+
+output "monitoring_sa_object" {
+  value = {
+    id          = confluent_service_account.monitoring.id
+    api_version = confluent_service_account.monitoring.api_version
+    kind        = confluent_service_account.monitoring.kind
+  }
+  description = "Object for monitoring service account (id, api_version, kind)"
+}

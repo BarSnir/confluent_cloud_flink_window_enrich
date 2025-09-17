@@ -63,3 +63,18 @@ variable flink_admin_sa_id {
   default     = ""
   description = "Service account ID for Flink Admin"
 }
+
+variable role_sa_monitoring {
+  type        = string
+  default     = "MetricsViewer"
+  description = "The Role name to bind to the monitoring principal"
+}
+
+variable "monitoring_sa_object" {
+  type = object({
+    id          = string
+    api_version = string
+    kind        = string
+  })
+  description = "Object describing the monitoring service account (id, api_version, kind)"
+}

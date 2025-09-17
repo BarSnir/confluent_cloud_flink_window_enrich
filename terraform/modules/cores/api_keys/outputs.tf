@@ -31,3 +31,14 @@ output "flink_api_secret" {
   value       = confluent_api_key.bsnir-pipelines-flink-service-account-api-key.secret
   sensitive   = true
 }
+
+output "monitoring_api_key_id" {
+  value       = confluent_api_key.bsnir-pipelines-monitoring-service-account-api-key.id
+  description = "ID of the monitoring service account API key"
+}
+
+output "monitoring_api_key_secret" {
+  value       = confluent_api_key.bsnir-pipelines-monitoring-service-account-api-key.secret
+  description = "Secret of the monitoring service account API key"
+  sensitive   = true
+}

@@ -91,7 +91,7 @@ services:
     command: >
       bash -c  "python ./project/main.py"
     environment:
-    - PROCESS_STEP=create_target_connectors
+    - PROCESS_STEP=load_dataset
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
@@ -226,8 +226,9 @@ services:
       /etc/confluent/docker/run"
   prometheus:
     image: prom/prometheus:latest
+    attach: false
     environment:
-      CCLOUD_API_FLINK: ${CCLOUD_API_FLINK}
+      CCLOUD_API_FLINK: ${CCLOUD_MONITORING_API_KEY_ID}
       CCLOUD_API_SECRET_FLINK: ${CCLOUD_API_SECRET_FLINK}
       CCLOUD_COMPUTE_POOL_IDS: ${CCLOUD_COMPUTE_POOL_IDS}
     ports:
@@ -241,6 +242,7 @@ services:
 
   grafana:
     image: grafana/grafana-oss:latest
+    attach: false
     ports:
       - "3000:3000"
     environment:

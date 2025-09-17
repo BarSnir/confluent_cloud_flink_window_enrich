@@ -54,3 +54,14 @@ resource "confluent_api_key" "bsnir-pipelines-flink-service-account-api-key" {
     }
   }
 }
+
+resource "confluent_api_key" "bsnir-pipelines-monitoring-service-account-api-key" {
+  display_name = "bsnir-pipelines-monitoring-service-account-api-key"
+  description  = "API key for monitoring service account"
+
+  owner {
+    id          = var.monitoring_sa_object.id
+    api_version = var.monitoring_sa_object.api_version
+    kind        = var.monitoring_sa_object.kind
+  }
+}

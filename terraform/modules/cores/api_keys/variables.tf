@@ -87,3 +87,17 @@ variable flink_region_object {
     kind = ""
   }
 }
+
+variable "monitoring_sa_object" {
+  type = object({
+    id          = string
+    api_version = string
+    kind        = string
+  })
+  default = {
+    id  = ""
+    api_version = ""
+    kind = ""
+  }
+  description = "Object describing the monitoring service account (id, api_version, kind)"
+}

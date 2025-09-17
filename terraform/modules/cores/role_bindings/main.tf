@@ -15,3 +15,9 @@ resource "confluent_role_binding" "bsnir-pipelines-flink-admin-service-account-r
   role_name   = var.role_sa_flink_admin
   crn_pattern = var.environment_resource_name
 }
+
+resource "confluent_role_binding" "bsnir-pipelines-monitoring-service-account-role-binding" {
+  principal   = "User:${var.monitoring_sa_object.id}"
+  role_name   = var.role_sa_monitoring
+  crn_pattern = var.environment_resource_name
+}

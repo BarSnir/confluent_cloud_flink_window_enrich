@@ -12,3 +12,8 @@ resource "confluent_service_account" "bsnir-pipelines-flink-admin-service-accoun
   display_name = "bsnir-pipelines-flink-admin-service-account"
   description  = ""
 }
+
+resource "confluent_service_account" "monitoring" {
+  display_name = var.monitoring_sa_display_name
+  description = "Service account for monitoring resources in the environment"
+}
