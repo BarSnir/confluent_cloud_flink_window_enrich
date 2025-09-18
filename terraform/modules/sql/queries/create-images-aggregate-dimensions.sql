@@ -9,5 +9,6 @@ WITH (
   'changelog.mode'='upsert',
   'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',
-  'scan.startup.mode' = 'earliest-offset'
+  'scan.startup.mode' = 'earliest-offset',
+  'kafka.consumer.isolation-level' = 'read-uncommitted'
 );

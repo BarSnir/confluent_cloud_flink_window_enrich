@@ -35,4 +35,11 @@ def process(logger):
     except RequestException:
         logger.error("Pay attention to connector request.")
     except Exception as e:
-        logger.error(e)
+        logger.error(e) 
+
+def quick_publish_es_dim(logger):
+    kafka_connect_client = KafkaConnectClient()
+    config = FileUtils.get_json_file('/opt/flink/project/configs/elasticsearch_dims.json')
+    kafka_connect_client.post_new_connector(
+        logger, config
+    )

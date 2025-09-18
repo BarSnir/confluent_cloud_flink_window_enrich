@@ -25,6 +25,8 @@ def main():
         process_elasticsearch_connector.process(logger)
         process_s3_connector.process(logger)
         process_neo4j_connector.process(logger)
+    elif PROCESS_STEP == "quick_publish_es_dim":
+        process_elasticsearch_connector.quick_publish_es_dim(logger)
 
 if __name__ == "__main__":
     main()

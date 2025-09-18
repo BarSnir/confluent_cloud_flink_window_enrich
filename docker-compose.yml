@@ -91,7 +91,7 @@ services:
     command: >
       bash -c  "python ./project/main.py"
     environment:
-    - PROCESS_STEP=generate_orders
+    - PROCESS_STEP=quick_publish_es_dim
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
