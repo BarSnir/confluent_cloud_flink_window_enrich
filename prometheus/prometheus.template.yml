@@ -10,9 +10,9 @@ scrape_configs:
       - targets: ["api.telemetry.confluent.cloud"]
     scheme: https
     basic_auth:
-      username: "LMY4BMZ24ZL7J6MU"
-      password: "cflt4EBQjtoq0VrBxRO2uidpAuFkuqkWYqrdgmrqWPjbPmE78I4uLQaF1q7GlJbw"
+      username: "xxCCLOUD_MONITORING_API_KEY_ID"
+      password: "xxCCLOUD_MONITORING_API_KEY_SECRET"
     metrics_path: /v2/metrics/cloud/export
     params:
       resource_compute_pool_id:
-        - "lfcp-pvx0xk"
+        - "xxCCLOUD_COMPUTE_POOL_IDS"

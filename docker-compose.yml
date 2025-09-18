@@ -91,7 +91,7 @@ services:
     command: >
       bash -c  "python ./project/main.py"
     environment:
-    - PROCESS_STEP=load_dataset
+    - PROCESS_STEP=generate_orders
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
@@ -251,6 +251,7 @@ services:
     volumes:
       - ./grafana/ds:/etc/grafana/provisioning/datasources
       - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:rw
     depends_on: [prometheus]
     restart: unless-stopped
 volumes:
