@@ -20,8 +20,10 @@ def main():
         process_debezium.process(logger)
     elif PROCESS_STEP == "step_b":
         process_elasticsearch_connector.process(logger)
+        process_elasticsearch_connector.process(logger, create_dims=True)
         process_s3_connector.process(logger)
         process_neo4j_connector.process(logger)
+    elif PROCESS_STEP == "step_c":
         process_batch_dataset.process(logger, "process_list_orders_generator")
 
 if __name__ == "__main__":

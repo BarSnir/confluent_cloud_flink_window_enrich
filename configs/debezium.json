@@ -1,5 +1,5 @@
 {
-    "name": "debezium_pyflink_v2",
+    "name": "debezium_pyflink_v1",
     "config":{
     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
     "database.history.kafka.bootstrap.servers": "pkc-z9doz.eu-west-1.aws.confluent.cloud:9092",

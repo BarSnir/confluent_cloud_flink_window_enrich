@@ -1,5 +1,5 @@
 {
-    "name": "search_engine_connector_v2",
+    "name": "search_engine_connector_v1",
     "config": {
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
         "type.name": "_doc",

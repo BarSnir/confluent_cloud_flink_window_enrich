@@ -1,5 +1,5 @@
 {
-    "name": "recommendation_sink_connector_v2",
+    "name": "recommendation_sink_connector_v1",
     "config":{
         "topics": "orders_vehicle_enriched_windowed",
         "connector.class": "streams.kafka.connect.sink.Neo4jSinkConnector",

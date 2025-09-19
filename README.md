@@ -9,18 +9,20 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 4. Flink enrich data 6 tables data
 5. Flink windowing 5 min events
 6. Distribute with Kafka Connect to MinIO, Elasticsearch & Neo4j
+7. Monitor it
 
 ## Infrastructure:
 
 1. Docker Compose:
 - MySql with Loaded Data[✅]
 - Kafka Connect Debezium [✅]
-- Kafka Connect MinIO, Elasticsearch, Neo4j []
-- Producer Generator to database []
+- Kafka Connect MinIO, Elasticsearch, Neo4j [✅]
+- Producer Generator to database [✅]
 - Elasticsearch [✅]
 - Kibana [✅]
 - Neo4j [✅]
 - MinIO [✅]
+- Monitoring with Prometheus & Grafana [✅]
 
 2. Terraform
 - Connectors API Key [✅]
@@ -36,13 +38,10 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - Schema Registry Service Account ID [✅]
 - Flink API Key [✅]
 - Flink API Secret [✅]
-- Flink Create target Table Statements []
-
-3. Assets:
-- Temporal join
+- Flink Create target Table Statements [✅]
 
 # Installation
-1. Terraform:
+1. Terraform: (In Terraform Terminal, cd terraform)
 - ! Don't forget:
 ```export CONFLUENT_CLOUD_API_KEY=XXX```
 ```export CONFLUENT_CLOUD_API_SECRET=XXX``
@@ -52,20 +51,15 @@ Short POC to examine the power of Flink when windowing a topic and enriching the
 - ```terraform plan -target=module.cores -out=cores```
 - ```terraform apply cores```
 - ```terraform output -json >> secrets.json```
-`
+
+⚠️  If you run this Demo more than once, please remove ```secrets.json``` under terraform folder
+⚠️  Didn't fixed yet issue for recognize schema registry not found in cluster,
+Just re-plan modules.core and re-apply
+
 
 2. .env Set:
-- Create .env file contains values as in the .env.exmple
-- Please use the secrets.json to fill the details
-
-
-3. Compose:
-- docker compose up -d
-- Inspect pyflink-client notes
-
-4. Terraform (again): for SQL running
-
-- Export required envs in terminal
+- Create .env with ```python3 generate_env.py <CONFLUENT_ORG_ID>```
+- From ```generate_env.py ``` output:
 ```
 export CONFLUENT_ORGANIZATION_ID="xxx" \
 CONFLUENT_ENVIRONMENT_ID="env-xxx" \
@@ -76,79 +70,31 @@ FLINK_API_KEY="xxx" \
 FLINK_API_SECRET="xxx"
 ```
 
+3. Compose infrastructure: ```docker compose up -d```
+
+4. Compose Data processes with Flink: 
+- Set ENV in docker-compose.yaml of Pyflink-Client container to ```PROCESS_STEP=step_a```
+- ```docker compose --profile pyflink-client up pyflink-client --build --force-recreate ```
+
+5. Terraform (again): for SQL running (In Terraform Terminal)
 - ```terraform plan -target=module.sql -out=sql```
 - ```terraform apply sql```
 
-5. Connect Elasticsearch, MinIO & Neo4j
-- 
+5. Compose Data flow with Kafka Connectors: 
+- Set ENV in docker-compose.yaml of Pyflink-Client container to ```PROCESS_STEP=step_b```
+- ```docker compose --profile pyflink-client up pyflink-client --build --force-recreate ```
+- Right now Data Is flowing with Flink SQL, Kafka & Connectors E2E
+
+6. Let optimize the pipeline to be soft real-time:
+- docker compose build orders-enricher
+- docker compose --profile enricher up orders-enricher -d
+
+7. Compose Data processes with Flink: 
+- Set ENV in docker-compose.yaml of Pyflink-Client container to ```PROCESS_STEP=step_c```
+- ```docker compose --profile pyflink-client up pyflink-client --build --force-recreate ```
+- Load the database with more Orders
+
+⚠️ We can repeat this process how ever we want
 
 
-docker compose build orders-enricher
-docker compose --profile enricher up orders-enricher -d
-
-6. Run the generator to see the Demo in action
-
-# SQLs
-## Temporal Join construct:
-1.  
-
-
-Change the Fact Source Table to ```append```
-```
-ALTER TABLE `Orders` SET (
-  'changelog.mode' = 'append'
-);
-```
-2. Create Update table with Primary Key:
-```
-CREATE TABLE vehicles_extract (
-    `OrderId` STRING,
-    `VehicleId` STRING,
-    `KM` INT,
-    `PrevOwnerNumber` INT,
-    `MarketInfoId` STRING,
-    `MediaTypeId` INT,
-    `YearOnRoad` INT,
-    `TestDate` INT,
-    `ImproveId` INT,
-    PRIMARY KEY (`OrderId`) NOT ENFORCED
-) WITH (
-  'changelog.mode'='retract',
-  'kafka.cleanup-policy'='compact',
-  'value.format' = 'avro-registry',
-  'scan.startup.mode' = 'earliest-offset'
-);
-
-INSERT INTO vehicles_extract (
-    `VehicleId`,
-    `KM`,
-    `PrevOwnerNumber`,
-    `OrderId`,
-    `MarketInfoId`,
-    `MediaTypeId`,
-    `YearOnRoad`,
-    `TestDate` ,
-    `ImproveId`
-)
-SELECT 
-  Vehicles.VehicleId,
-  Vehicles.KM,
-  Vehicles.PrevOwnerNumber,
-  Vehicles.OrderId,
-  Vehicles.MarketInfoId,
-  Vehicles.MediaTypeId,
-  Vehicles.YearOnRoad,
-  Vehicles.TestDate,
-  Vehicles.ImproveId
-FROM Vehicles;
-
-```
-3. Temporal Join:
-```
-SELECT
-  v.`KM`
-FROM `Orders` AS o
-JOIN `vehicles_extract` FOR SYSTEM_TIME AS OF o.`$rowtime` AS v
-  ON o.OrderId = v.OrderId;
-```
-
+8. Inspect Monitor Under localhost:3000 - Under the dashboards. 

@@ -1,5 +1,5 @@
 {
-  "name": "search_engine_connector_dim_v3",
+  "name": "search_engine_connector_dim_v1",
   "config": {
     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
     "tasks.max": "1",
