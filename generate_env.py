@@ -17,8 +17,7 @@ def generate_env_file(org_id):
             env_file.write(f"CONFLUENT_ENVIRONMENT_ID={fetch_secret_value(secrets, 'environment_id')}")
             print("Before Running the next terraform stage, pase this in your terminal:")
             terminal_message = rf"""
-export CCLOUD_BROKER_HOST={get_broker_host(secrets)} \
-FLINK_COMPUTE_POOL_ID={fetch_secret_value(secrets, 'flink_compute_pool_id')} \
+export FLINK_COMPUTE_POOL_ID={fetch_secret_value(secrets, 'flink_compute_pool_id')} \
 FLINK_API_KEY={fetch_secret_value(secrets, 'flink_api_key')} \
 FLINK_API_SECRET={fetch_secret_value(secrets, 'flink_api_secret')} \
 FLINK_PRINCIPAL_ID={fetch_secret_value(secrets, 'flink_service_account_id')} \

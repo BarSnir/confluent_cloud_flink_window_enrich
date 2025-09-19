@@ -80,18 +80,25 @@ services:
     links:
       - mysql:db
   pyflink-client:
+    profiles: ["pyflink-client"]
     platform: linux/arm64/v8
     container_name: pyflink-client
     depends_on:
     - taskmanager
     - kafka-connect-onpremis
+    healthcheck:
+      test: curl http://kafka-connect:8083/connectors || exit 1
+      start_period: 5m
+      interval: 30s
+      timeout: 10s
+      retries: 1
     build:
       context: ./images/pyflink
       dockerfile: .Dockerfile
     command: >
       bash -c  "python ./project/main.py"
     environment:
-    - PROCESS_STEP=quick_publish_es_dim
+    - PROCESS_STEP=step_a
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
@@ -116,6 +123,37 @@ services:
     - ./datasets:/opt/flink/datasets
     - .:/opt/flink/project
     - ./flink_checkpoints:/opt/flink/checkpoints
+    scale: 1
+  orders-enricher:
+    container_name: orders-enricher
+    build:
+      context: ./images/orders-enricher
+      dockerfile: .Dockerfile
+    profiles: ["enricher"]
+    restart: "no"
+    depends_on:
+      - elasticsearch
+    environment:
+      CCLOUD_BROKER_HOST: ${CCLOUD_BROKER_HOST}
+      CCLOUD_API_KEY: ${CCLOUD_API_KEY}
+      CCLOUD_API_SECRET: ${CCLOUD_API_SECRET}
+      CCLOUD_SCHEMA_REGISTRY_URL: ${CCLOUD_SCHEMA_REGISTRY_URL}
+      CCLOUD_SCHEMA_REGISTRY_API_KEY: ${CCLOUD_SCHEMA_REGISTRY_API_KEY}
+      CCLOUD_SCHEMA_REGISTRY_API_SECRET: ${CCLOUD_SCHEMA_REGISTRY_API_SECRET}
+      GROUP_ID: orders-enricher-v1
+      AUTO_OFFSET_RESET: earliest
+      SECURITY_PROTOCOL: SASL_SSL
+      SASL_MECHANISM: PLAIN
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      IDX_VEHICLE: vehicle_table
+      IDX_CUSTOMER: customer_table
+      IDX_CUSTOMER_AGG_5M: customer_agg_5m
+      IDX_MARKET_INFO: market_info_table
+      IDX_MEDIA_TYPE: media_type_table
+      IDX_IMPROVING_PARTS: improving_parts_table
+      IDX_OUT: orders_enriched
+      LOG_LEVEL: INFO
+      DELETE_ON_TOMBSTONE: "true"
     scale: 1
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
@@ -174,7 +212,7 @@ services:
     ports:
       - 8083:8083
     healthcheck:
-      test: curl http://kafka-connect:8083/ || exit 1
+      test: curl http://kafka-connect:8083/connectors || exit 1
       start_period: 4m
       interval: 30s
       timeout: 10s

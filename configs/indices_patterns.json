@@ -1,0 +1,34 @@
+{
+  "index_patterns": [
+    "vehicle_table*",
+    "customer_table*",
+    "media_type_table*",
+    "market_info_table*",
+    "improving_parts_table*",
+    "customer_agg_5m*",
+    "images_aggregate*"
+  ],
+  "priority": 200,
+  "version": 1,
+  "composed_of": ["ct_dim_common_v1"],
+  "template": {
+    "mappings": {
+      "dynamic": true,
+      "date_detection": false,
+      "dynamic_templates": [
+        {
+          "strings_as_keywords": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      ]
+    }
+  },
+  "_meta": {
+    "desc": "All string fields map to keyword (no text). Friendly ingest defaults."
+  }
+}

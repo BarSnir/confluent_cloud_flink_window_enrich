@@ -82,6 +82,10 @@ FLINK_API_SECRET="xxx"
 5. Connect Elasticsearch, MinIO & Neo4j
 - 
 
+
+docker compose build orders-enricher
+docker compose --profile enricher up orders-enricher -d
+
 6. Run the generator to see the Demo in action
 
 # SQLs

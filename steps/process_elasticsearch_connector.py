@@ -9,8 +9,10 @@ from libs.connectors.elasticsearch import ElasticsearchConnector
 MODULE_MESSAGE = 'Step F || Generating Elasticsearch sink connector'
 FILE_PATH = '/opt/flink/project/configs/elasticsearch.json'
 INDEX_PATTERN = '/opt/flink/project/configs/index_pattern.json'
+DIMS_PATTERNS = '/opt/flink/project/configs/indices_patterns.json'
+DIMS_PATH = '/opt/flink/project/configs/elasticsearch_dims.json'
 
-def process(logger):
+def process(logger, create_dims=False):
     ColorLogger.log_new_step_dashes(logger)
     logger.info(MODULE_MESSAGE)
     ColorLogger.log_new_step_dashes(logger)
@@ -18,9 +20,12 @@ def process(logger):
     kafka_connect_client = KafkaConnectClient()
     elasticsearch_connector = ElasticsearchConnector()
     try:
-        config = FileUtils.get_json_file(FILE_PATH)
-        index_pattern = FileUtils.get_json_file(INDEX_PATTERN)
-        elasticsearch_connector.put_index_pattern(index_pattern, logger)
+        put_indices_pattern(
+            elasticsearch_connector,
+            logger, 
+            create_dims
+        )
+        config = get_config(create_dims=False)
         logger.debug(config)
         topic_list = ListUtils.str_to_list(
             config.get('config').get('topics'),
@@ -35,11 +40,17 @@ def process(logger):
     except RequestException:
         logger.error("Pay attention to connector request.")
     except Exception as e:
-        logger.error(e) 
+        logger.error(e)
 
-def quick_publish_es_dim(logger):
-    kafka_connect_client = KafkaConnectClient()
-    config = FileUtils.get_json_file('/opt/flink/project/configs/elasticsearch_dims.json')
-    kafka_connect_client.post_new_connector(
-        logger, config
-    )
+def put_indices_pattern(elasticsearch_connector, logger, create_dims=False):
+    if create_dims:
+        index_pattern = FileUtils.get_json_file(DIMS_PATTERNS)
+        elasticsearch_connector.put_index_pattern(index_pattern, logger)
+        return
+    index_pattern = FileUtils.get_json_file(INDEX_PATTERN)
+    elasticsearch_connector.put_index_pattern(index_pattern, logger)
+
+def get_config(create_dims=False):
+    if create_dims:
+        return FileUtils.get_json_file(DIMS_PATH)
+    return FileUtils.get_json_file(FILE_PATH)
