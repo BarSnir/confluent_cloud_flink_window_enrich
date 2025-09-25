@@ -2,34 +2,24 @@
 """
 Kafka→Elasticsearch DIM enricher (Confluent Cloud, Avro + Schema Registry, Debezium envelope).
 
-Flow per record (Orders topic):
-  1) Deserialize Avro (Debezium envelope with `before` / `after`).
-  2) Extract OrderId, CustomerId, etc. from `after`. Ignore tombstones / deletes (optionally delete in ES).
-  3) Search vehicle_table by OrderId (term on OrderId) ⇒ get VehicleId (doc _id) + ImproveId/MarketInfoId/MediaTypeId.
-  4) mget all relevant DIM docs by their IDs: customer_table, customer_agg_5m, improving_parts_table, market_info_table, media_type_table.
-  5) Build enriched doc with:
-       - pipeline_start  (Kafka record timestamp)  → ISO8601 UTC with millis 'Z' + pipeline_start_ms
-       - ingest_ts       (now at ingest)           → ISO8601 UTC with millis 'Z' + ingest_ts_ms
-       - latency_ms      (ingest_ts_ms - pipeline_start_ms)
-  6) Index into Elasticsearch index IDX_OUT (default: orders_enriched) with _id = OrderId.
-  7) Commit Kafka offset only after successful index.
-"""
+
 
 import os
 import sys
 import time
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Tuple, Set
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
-from confluent_kafka import DeserializingConsumer, KafkaException
+from confluent_kafka import DeserializingConsumer, KafkaException, TopicPartition
 from confluent_kafka.serialization import StringDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
 # ---------------------- Config & Helpers ----------------------
 
@@ -49,8 +39,7 @@ def fmt_iso(ts_ms: int) -> str:
     return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:23] + 'Z'
 
 def kafka_ts_ms(msg) -> int:
-    # msg.timestamp() -> (type, ts_ms)  where type is 0|1 (CreateTime/LogAppendTime)
-    ttype, ts = msg.timestamp()
+    _ttype, ts = msg.timestamp()
     return int(ts) if ts is not None else now_ms()
 
 def build_sr_and_deserializer(topic: str, sr_url: str, sr_user: str, sr_pass: str) -> AvroDeserializer:
@@ -65,18 +54,32 @@ def build_sr_and_deserializer(topic: str, sr_url: str, sr_user: str, sr_pass: st
 
 def build_consumer() -> DeserializingConsumer:
     load_dotenv(os.getenv("ENV_PATH", ".env"))
+
+    broker_host = getenv_required("CCLOUD_BROKER_HOST")
+    bootstrap = broker_host if ":" in broker_host else f"{broker_host}:9092"
+
     conf = {
-        "bootstrap.servers": f'{getenv_required("CCLOUD_BROKER_HOST")}:9092',
+        "bootstrap.servers": bootstrap,
         "security.protocol": os.getenv("SECURITY_PROTOCOL", "SASL_SSL"),
         "sasl.mechanism": os.getenv("SASL_MECHANISM", "PLAIN"),
         "sasl.username": getenv_required("CCLOUD_API_KEY"),
         "sasl.password": getenv_required("CCLOUD_API_SECRET"),
+
         "group.id": os.getenv("GROUP_ID", "orders-enricher-v1"),
         "auto.offset.reset": os.getenv("AUTO_OFFSET_RESET", "earliest"),
+
         "enable.auto.commit": False,
-        "key.deserializer": StringDeserializer()
+        "key.deserializer": StringDeserializer(),
+
+        # Throughput/latency knobs (tweak via env)
+        "fetch.wait.max.ms": int(os.getenv("FETCH_WAIT_MAX_MS", "20")),
+        "fetch.min.bytes": int(os.getenv("FETCH_MIN_BYTES", "1")),
+        "queued.max.messages.kbytes": int(os.getenv("QUEUED_MAX_MESSAGES_KB", "131072")),
+        "max.poll.interval.ms": int(os.getenv("MAX_POLL_INTERVAL_MS", "300000")),
+        "socket.keepalive.enable": True,
     }
-    topic = 'Orders'
+
+    topic = os.getenv("ORDERS_TOPIC", "Orders")
     sr_url  = getenv_required("CCLOUD_SCHEMA_REGISTRY_URL")
     sr_user = getenv_required("CCLOUD_SCHEMA_REGISTRY_API_KEY")
     sr_pass = getenv_required("CCLOUD_SCHEMA_REGISTRY_API_SECRET")
@@ -92,85 +95,107 @@ def build_es() -> Elasticsearch:
     user = os.getenv("ELASTIC_USER")
     password = os.getenv("ELASTIC_PASSWORD")
     verify_certs = os.getenv("ELASTIC_VERIFY_CERTS", "false").lower() == "true"
+
     if user and password:
         es = Elasticsearch(url, basic_auth=(user, password), verify_certs=verify_certs)
     else:
         es = Elasticsearch(url, verify_certs=verify_certs)
+
     try:
         es.info()
     except Exception as e:
         print(f"[WARN] Could not call ES info(): {e}", file=sys.stderr)
     return es
 
-# ---------------------- Enrichment Logic ----------------------
+# ---------------------- Batch ES Helpers ----------------------
 
-def search_vehicle_by_orderid(es: Elasticsearch, order_id: Any, index: str) -> Optional[Dict[str, Any]]:
+def batch_search_vehicle_by_orderids(
+    es: Elasticsearch, index: str, order_ids: List[Any]
+) -> Dict[str, Dict[str, Any]]:
     """
-    Find vehicle_table doc by OrderId (not _id). Returns {'_id': VehicleId, '_source': {...}} or None.
-    Assumes OrderId is mapped as keyword (per your index template).
+    One search (terms) to fetch vehicles for all order_ids in the batch.
+    Returns: { str(OrderId) : {'_id': VehicleId, '_source': {...}} }
     """
+    if not order_ids:
+        return {}
+    # unique & stringify (keyword field)
+    ids = list({str(x) for x in order_ids if x is not None})
     try:
         resp = es.search(
             index=index,
-            size=1,
+            size=len(ids),                         # small batch (<< 10k default window)
             track_total_hits=False,
-            terminate_after=1,
-            query={"term": {"OrderId": str(order_id)}},
+            query={"terms": {"OrderId": ids}},
             _source=[
                 "ImproveId","KM","MarketInfoId","MediaTypeId","OrderId",
                 "PrevOwnerNumber","TestDate","YearOnRoad"
             ],
-            request_timeout=5
+            request_timeout=10
         )
-        hits = resp.get("hits", {}).get("hits", [])
-        if hits:
-            return {"_id": hits[0]["_id"], "_source": hits[0].get("_source", {})}
-        return None
-    except Exception as e:
-        logging.exception(f"ES search vehicle_table failed for OrderId={order_id}: {e}")
-        return None
-
-def mget_dims(es: Elasticsearch, docs: Dict[str, Optional[Any]]) -> Dict[str, Optional[Dict[str, Any]]]:
-    """
-    docs: mapping of logical name -> (index, _id)
-    Returns mapping logical name -> _source (dict) or None
-    """
-    request_docs = []
-    name_for_slot = []
-    for name, tup in docs.items():
-        if not tup or tup[1] is None:
-            continue
-        index, _id = tup
-        request_docs.append({"_index": index, "_id": str(_id)})
-        name_for_slot.append(name)
-
-    out: Dict[str, Optional[Dict[str, Any]]] = {k: None for k in docs.keys()}
-    if not request_docs:
+        out: Dict[str, Dict[str, Any]] = {}
+        for hit in resp.get("hits", {}).get("hits", []):
+            src = hit.get("_source", {}) or {}
+            oid = str(src.get("OrderId"))
+            if oid not in out:  # first wins if duplicates
+                out[oid] = {"_id": hit.get("_id"), "_source": src}
         return out
+    except Exception as e:
+        logging.exception(f"ES batch vehicle search failed: {e}")
+        return {}
+
+def mget_by_index(
+    es: Elasticsearch, index_to_ids: Dict[str, Set[Any]]
+) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """
+    One mget across indices. Returns:
+    {
+      'customer_table': { '<id>': {doc}, ... },
+      'market_info_table': { '<id>': {doc}, ... },
+      ...
+    }
+    """
+    docs = []
+    idx_list = []
+    id_list = []
+    for idx, ids in index_to_ids.items():
+        for _id in ids:
+            if _id is None:
+                continue
+            docs.append({"_index": idx, "_id": str(_id)})
+            idx_list.append(idx)
+            id_list.append(str(_id))
+
+    result: Dict[str, Dict[str, Dict[str, Any]]] = {idx: {} for idx in index_to_ids.keys()}
+    if not docs:
+        return result
 
     try:
-        resp = es.mget(docs=request_docs, source=True, request_timeout=5)
+        resp = es.mget(docs=docs, source=True, request_timeout=10)
         for i, doc in enumerate(resp.get("docs", [])):
-            name = name_for_slot[i] if i < len(name_for_slot) else f"slot{i}"
+            idx = idx_list[i]
+            did = id_list[i]
             if doc.get("found"):
-                out[name] = doc.get("_source", {})
-            else:
-                out[name] = None
+                result[idx][did] = doc.get("_source", {})
+        return result
     except Exception as e:
         logging.exception(f"ES mget failed: {e}")
-    return out
+        return result
+
+# ---------------------- Build Enriched ----------------------
 
 def build_enriched_doc(order_after: Dict[str, Any],
                        vehicle_hit: Optional[Dict[str, Any]],
-                       dims: Dict[str, Optional[Dict[str, Any]]],
+                       customer: Optional[Dict[str, Any]],
+                       cust_agg: Optional[Dict[str, Any]],
+                       market_info: Optional[Dict[str, Any]],
+                       media_type: Optional[Dict[str, Any]],
+                       improving_parts: Optional[Dict[str, Any]],
                        kafka_ts: int,
                        ingest_ts: int) -> Dict[str, Any]:
     latency = max(0, ingest_ts - kafka_ts)
     enriched = {
-        # ISO8601 UTC with milliseconds and trailing 'Z'
         "pipeline_start": fmt_iso(kafka_ts),
         "ingest_ts": fmt_iso(ingest_ts),
-        # Raw millis for analytics/aggregations
         "pipeline_start_ms": kafka_ts,
         "ingest_ts_ms": ingest_ts,
         "latency_ms": latency,
@@ -183,23 +208,39 @@ def build_enriched_doc(order_after: Dict[str, Any],
         },
         "dim": {
             "vehicle": vehicle_hit["_source"] if vehicle_hit else None,
-            "customer": dims.get("customer_table"),
-            "customer_agg_5m": dims.get("customer_agg_5m"),
-            "market_info": dims.get("market_info_table"),
-            "media_type": dims.get("media_type_table"),
-            "improving_parts": dims.get("improving_parts_table"),
+            "customer": customer,
+            "customer_agg_5m": cust_agg,
+            "market_info": market_info,
+            "media_type": media_type,
+            "improving_parts": improving_parts,
         }
     }
-    # also include VehicleId from ES _id if we found the vehicle doc
     if vehicle_hit:
         enriched["dim"]["vehicle_id"] = vehicle_hit["_id"]
     return enriched
 
-def handle_delete(es: Elasticsearch, index_out: str, order_id: Any):
+def handle_delete(es: Elasticsearch, index_out: str, doc_id: Any):
     try:
-        es.delete(index=index_out, id=str(order_id), ignore=[404])
+        es.delete(index=index_out, id=str(doc_id), ignore=[404])
     except Exception as e:
-        logging.exception(f"Failed to delete {order_id} from {index_out}: {e}")
+        logging.exception(f"Failed to delete {doc_id} from {index_out}: {e}")
+
+# ---------------------- Batch Collector ----------------------
+
+def collect_batch(consumer: DeserializingConsumer,
+                  max_batch: int,
+                  timeout_ms: int) -> List:
+    """Poll in a loop until we have up to max_batch messages or timeout elapsed."""
+    deadline = time.time() + (timeout_ms / 1000.0)
+    out = []
+    while len(out) < max_batch and time.time() < deadline:
+        msg = consumer.poll(0.05)
+        if msg is None:
+            continue
+        if msg.error():
+            continue
+        out.append(msg)
+    return out
 
 # ---------------------- Main Loop ----------------------
 
@@ -209,6 +250,7 @@ def main():
         format="%(asctime)s %(levelname)s %(message)s",
         stream=sys.stdout
     )
+
     consumer = build_consumer()
     es = build_es()
 
@@ -222,69 +264,170 @@ def main():
     idx_out     = os.getenv("IDX_OUT", "orders_enriched")
 
     delete_on_tombstone = os.getenv("DELETE_ON_TOMBSTONE", "true").lower() == "true"
+    batch_size = int(os.getenv("BATCH_SIZE", "500"))
+    batch_timeout_ms = int(os.getenv("BATCH_TIMEOUT_MS", "250"))
 
-    print(f"[INFO] Starting loop. Output index={idx_out}")
+    print(f"[INFO] Starting loop. Output index={idx_out} | batch_size={batch_size} | batch_timeout_ms={batch_timeout_ms}")
+
     try:
         while True:
-            msg = consumer.poll(1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                raise KafkaException(msg.error())
-
-            t_ms = kafka_ts_ms(msg)
-            v = msg.value()  # AvroDeserializer -> Python dict
-
-            if v is None:
-                # tombstone (null value) - optional delete
-                key = msg.key()
-                if delete_on_tombstone and key is not None:
-                    handle_delete(es, idx_out, key)
-                    consumer.commit(msg, asynchronous=False)
+            msgs = collect_batch(consumer, batch_size, batch_timeout_ms)
+            if not msgs:
                 continue
 
-            # Debezium envelope
-            after = v.get("after")
-            op = v.get("op")
-            # Delete events typically have after=None and/or op='d'
-            if after is None:
-                if delete_on_tombstone:
-                    key = msg.key() or (v.get("before") or {}).get("OrderId")
-                    if key is not None:
-                        handle_delete(es, idx_out, key)
-                        consumer.commit(msg, asynchronous=False)
+            actions: List[Dict[str, Any]] = []
+            last_offsets: Dict[Tuple[str, int], int] = {}
+
+            # 1) Collect IDs from batch
+            order_ids: List[Any] = []
+            cust_ids: Set[Any] = set()
+            records: List[Tuple[Any, Dict[str, Any], int]] = []  # (key, after, kafka_ts)
+
+            raw_msgs: List[Any] = []
+
+            for msg in msgs:
+                raw_msgs.append(msg)
+                tp = (msg.topic(), msg.partition())
+                last_offsets[tp] = max(last_offsets.get(tp, -1), msg.offset())
+
+                t_ms = kafka_ts_ms(msg)
+                v = msg.value()
+
+                # Tombstone
+                if v is None:
+                    if delete_on_tombstone and msg.key() is not None:
+                        try:
+                            handle_delete(es, idx_out, msg.key())
+                        except Exception:
+                            pass
+                    continue
+
+                after = v.get("after")
+                if after is None:
+                    if delete_on_tombstone:
+                        key = msg.key() or (v.get("before") or {}).get("OrderId")
+                        if key is not None:
+                            try:
+                                handle_delete(es, idx_out, key)
+                            except Exception:
+                                pass
+                    continue
+
+                order_id = after.get("OrderId")
+                cust_id  = after.get("CustomerId")
+                if order_id is not None:
+                    order_ids.append(order_id)
+                if cust_id is not None:
+                    cust_ids.add(cust_id)
+
+                records.append((msg.key(), after, t_ms))
+
+            if not records:
+                # Nothing to index; commit deletes if needed
+                if last_offsets:
+                    try:
+                        offsets = [TopicPartition(t, p, o + 1) for (t, p), o in last_offsets.items()]
+                        consumer.commit(offsets=offsets, asynchronous=True)
+                    except Exception as e:
+                        logging.exception(f"Commit failed: {e}")
                 continue
 
-            order_id = after.get("OrderId")
-            cust_id  = after.get("CustomerId")
-            ingest_ts = now_ms()
+            # 2) ONE search for all vehicles by OrderId
+            orderid_to_vehicle = batch_search_vehicle_by_orderids(es, idx_vehicle, order_ids)
 
-            # 1) vehicle by OrderId (to obtain VehicleId + foreign keys)
-            vehicle_hit = search_vehicle_by_orderid(es, order_id, idx_vehicle)
+            # 3) Gather DIM IDs from vehicle docs
+            market_ids: Set[Any] = set()
+            media_ids: Set[Any] = set()
+            improve_ids: Set[Any] = set()
 
-            # 2) prepare mget docs for all other dims
-            docs = {
-                "customer_table":       (idx_customer,  cust_id),
-                "customer_agg_5m":      (idx_cust_agg,  cust_id),
-                "market_info_table":    (idx_market,   (vehicle_hit or {}).get("_source", {}).get("MarketInfoId")),
-                "media_type_table":     (idx_media,    (vehicle_hit or {}).get("_source", {}).get("MediaTypeId")),
-                "improving_parts_table":(idx_improve,  (vehicle_hit or {}).get("_source", {}).get("ImproveId")),
+            for oid in {str(x) for x in order_ids}:
+                vhit = orderid_to_vehicle.get(oid)
+                if not vhit:
+                    continue
+                src = vhit.get("_source", {}) or {}
+                if src.get("MarketInfoId") is not None:
+                    market_ids.add(src.get("MarketInfoId"))
+                if src.get("MediaTypeId") is not None:
+                    media_ids.add(src.get("MediaTypeId"))
+                if src.get("ImproveId") is not None:
+                    improve_ids.add(src.get("ImproveId"))
+
+            # 4) ONE mget for all DIMs
+            index_to_ids = {
+                idx_customer: cust_ids,
+                idx_cust_agg: cust_ids,
+                idx_market:   market_ids,
+                idx_media:    media_ids,
+                idx_improve:  improve_ids,
             }
-            dims = mget_dims(es, docs)
+            dim_docs = mget_by_index(es, index_to_ids)
+            # Flatten into easy dicts
+            cust_map   = dim_docs.get(idx_customer, {})
+            custagg_map= dim_docs.get(idx_cust_agg, {})
+            market_map = dim_docs.get(idx_market, {})
+            media_map  = dim_docs.get(idx_media, {})
+            improve_map= dim_docs.get(idx_improve, {})
 
-            # 3) build enriched doc
-            doc = build_enriched_doc(after, vehicle_hit, dims, kafka_ts=t_ms, ingest_ts=ingest_ts)
+            # 5) Build actions for bulk
+            for _key, after, t_ms in records:
+                order_id = after.get("OrderId")
+                cust_id  = after.get("CustomerId")
+                ingest_ts = now_ms()
 
-            # 4) index/upsert
-            try:
-                es.index(index=idx_out, id=str(order_id), document=doc, request_timeout=5)
-            except Exception as e:
-                logging.exception(f"Failed to index enriched doc order_id={order_id}: {e}")
-                # don't commit on failure; message will be retried
-                continue
+                vhit = orderid_to_vehicle.get(str(order_id))
+                market = None
+                media  = None
+                impr   = None
+                if vhit:
+                    vs = vhit.get("_source", {}) or {}
+                    mid = vs.get("MarketInfoId")
+                    mtid= vs.get("MediaTypeId")
+                    iid = vs.get("ImproveId")
+                    if mid is not None:
+                        market = market_map.get(str(mid))
+                    if mtid is not None:
+                        media = media_map.get(str(mtid))
+                    if iid is not None:
+                        impr = improve_map.get(str(iid))
 
-            # 5) commit after success
-            consumer.commit(msg, asynchronous=False)
+                customer = cust_map.get(str(cust_id)) if cust_id is not None else None
+                cust_agg = custagg_map.get(str(cust_id)) if cust_id is not None else None
+
+                doc = build_enriched_doc(
+                    order_after=after,
+                    vehicle_hit=vhit,
+                    customer=customer,
+                    cust_agg=cust_agg,
+                    market_info=market,
+                    media_type=media,
+                    improving_parts=impr,
+                    kafka_ts=t_ms,
+                    ingest_ts=ingest_ts
+                )
+
+                actions.append({
+                    "_op_type": "index",
+                    "_index": idx_out,
+                    "_id": str(order_id),
+                    "_source": doc
+                })
+
+            # 6) Bulk index this batch
+            if actions:
+                try:
+                    bulk(es, actions, request_timeout=20, refresh=False)
+                except Exception as e:
+                    logging.exception(f"Bulk index failed: {e}")
+                    # On failure, skip commit; will retry
+                    continue
+
+            # 7) Commit last offsets for each partition (after bulk success)
+            if last_offsets:
+                try:
+                    offsets = [TopicPartition(t, p, o + 1) for (t, p), o in last_offsets.items()]
+                    consumer.commit(offsets=offsets, asynchronous=True)
+                except Exception as e:
+                    logging.exception(f"Commit failed: {e}")
 
     except KeyboardInterrupt:
         print("[INFO] Shutting down (Ctrl+C).")

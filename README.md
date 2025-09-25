@@ -82,16 +82,16 @@ FLINK_API_SECRET="xxx"
 
 5. Compose Data flow with Kafka Connectors: 
 - Set ENV in docker-compose.yaml of Pyflink-Client container to ```PROCESS_STEP=step_b```
-- ```docker compose --profile pyflink-client up pyflink-client --build --force-recreate ```
+- ```docker compose --profile pyflink-client up pyflink-client --force-recreate```
 - Right now Data Is flowing with Flink SQL, Kafka & Connectors E2E
 
 6. Let optimize the pipeline to be soft real-time:
-- docker compose build orders-enricher
-- docker compose --profile enricher up orders-enricher -d
+- ```docker compose build orders-enricher```
+- ```docker compose --profile enricher up orders-enricher```
 
 7. Compose Data processes with Flink: 
 - Set ENV in docker-compose.yaml of Pyflink-Client container to ```PROCESS_STEP=step_c```
-- ```docker compose --profile pyflink-client up pyflink-client --build --force-recreate ```
+- ```docker compose --profile pyflink-client up pyflink-client --force-recreate```
 - Load the database with more Orders
 
 ⚠️ We can repeat this process how ever we want

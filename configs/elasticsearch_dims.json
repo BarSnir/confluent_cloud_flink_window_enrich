@@ -28,7 +28,7 @@
     "transforms.customer_agg_5m_extract.field": "CustomerId",
     "transforms.customer_agg_5m_extract.predicate": "is_customer_agg_5m",
     "transforms.images_aggregate_extract.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-    "transforms.images_aggregate_extract.field": "images_aggregate",
+    "transforms.images_aggregate_extract.field": "images_order_id",
     "transforms.images_aggregate_extract.predicate": "is_images_aggregate",
     "transforms.improving_parts_table_extract.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
     "transforms.improving_parts_table_extract.field": "ImproveId",

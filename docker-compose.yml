@@ -98,7 +98,7 @@ services:
     command: >
       bash -c  "python ./project/main.py"
     environment:
-    - PROCESS_STEP=step_a
+    - PROCESS_STEP=step_c
     - DATABASE=production
     - DB_HOST=mysql
     - DB_USER=root
@@ -140,8 +140,8 @@ services:
       CCLOUD_SCHEMA_REGISTRY_URL: ${CCLOUD_SCHEMA_REGISTRY_URL}
       CCLOUD_SCHEMA_REGISTRY_API_KEY: ${CCLOUD_SCHEMA_REGISTRY_API_KEY}
       CCLOUD_SCHEMA_REGISTRY_API_SECRET: ${CCLOUD_SCHEMA_REGISTRY_API_SECRET}
-      GROUP_ID: orders-enricher-v1
-      AUTO_OFFSET_RESET: earliest
+      GROUP_ID: orders-enricher-v7
+      AUTO_OFFSET_RESET: latest
       SECURITY_PROTOCOL: SASL_SSL
       SASL_MECHANISM: PLAIN
       ELASTICSEARCH_URL: http://elasticsearch:9200

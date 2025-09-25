@@ -25,7 +25,7 @@ def process(logger, create_dims=False):
             logger, 
             create_dims
         )
-        config = get_config(create_dims=False)
+        config = get_config(logger, create_dims)
         logger.debug(config)
         topic_list = ListUtils.str_to_list(
             config.get('config').get('topics'),
@@ -50,7 +50,8 @@ def put_indices_pattern(elasticsearch_connector, logger, create_dims=False):
     index_pattern = FileUtils.get_json_file(INDEX_PATTERN)
     elasticsearch_connector.put_index_pattern(index_pattern, logger)
 
-def get_config(create_dims=False):
+def get_config(logger, create_dims=False):
     if create_dims:
+        logger.info("Creating dims connector")
         return FileUtils.get_json_file(DIMS_PATH)
     return FileUtils.get_json_file(FILE_PATH)

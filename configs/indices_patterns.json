@@ -12,6 +12,10 @@
   "version": 1,
   "composed_of": ["ct_dim_common_v1"],
   "template": {
+    "settings": {
+        "number_of_replicas": 0,
+        "number_of_shards": 1
+    },
     "mappings": {
       "dynamic": true,
       "date_detection": false,

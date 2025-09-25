@@ -139,7 +139,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
-
+/terraform/cores
 # mypy
 .mypy_cache/
 .dmypy.json

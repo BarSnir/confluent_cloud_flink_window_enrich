@@ -9,14 +9,11 @@ SELECT
   v.YearOnRoad,
   v.TestDate,
   v.ImproveId,
-
   ia.images_count,
   ia.images_urls,
-
   ip.StageLevel,
   ip.StageText,
   ip.PartsImprovedList,
-
   mi.AirBags,
   mi.SunRoof,
   mi.MagnesiumWheels,
@@ -40,12 +37,10 @@ SELECT
   mi.PowerWheel,
   mi.FullyAutonomic,
   mi.MarketPrice,
-
   mt.AvailableDiskSlot,
   mt.UsbSlotType,
   mt.UsbSlots,
   mt.IsTouchDisplay
-  
 FROM vehicle_table v
 JOIN images_aggregate       AS ia ON ia.images_order_id = v.OrderId
 JOIN improving_parts_table  AS ip ON ip.ImproveId       = v.ImproveId
