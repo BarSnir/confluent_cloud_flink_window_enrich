@@ -69,6 +69,8 @@ FLINK_REST_ENDPOINT="https://flink.xxx.xxx.confluent.cloud" \
 FLINK_API_KEY="xxx" \
 FLINK_API_SECRET="xxx"
 ```
+⚠️ In Terraform terminal
+
 
 3. Compose infrastructure: ```docker compose up -d```
 
